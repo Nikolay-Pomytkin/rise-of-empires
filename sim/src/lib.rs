@@ -76,6 +76,8 @@ impl bevy_app::Plugin for SimPlugin {
             .insert_resource(CommandBuffer::default())
             .insert_resource(SimWorld::default())
             .insert_resource(EntityIdGenerator::default())
+            .insert_resource(GameData::default())
+            .insert_resource(PlayerModifiers::default())
             .add_message::<SnapshotEvent>()
             .add_systems(
                 FixedUpdate,

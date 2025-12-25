@@ -10,6 +10,7 @@ use bevy_ecs::prelude::*;
 
 use crate::{
     components::*,
+    data::PlayerModifiers,
     world::SimWorld,
 };
 
@@ -17,6 +18,7 @@ use crate::{
 pub fn gather_system(
     mut commands: Commands,
     mut sim_world: ResMut<SimWorld>,
+    player_modifiers: Res<PlayerModifiers>,
     mut gatherers: Query<(
         Entity,
         &SimEntity,
@@ -32,6 +34,9 @@ pub fn gather_system(
     let mut gatherer_updates: Vec<(Entity, GathererUpdate)> = Vec::new();
 
     for (entity, sim_entity, owner, pos, gatherer, unit) in gatherers.iter() {
+        // Get player modifiers for gather rate
+        let modifiers = player_modifiers.get(owner.player_id);
+        
         let update = process_gatherer(
             entity,
             sim_entity,
@@ -39,6 +44,7 @@ pub fn gather_system(
             &pos,
             &gatherer,
             unit,
+            &modifiers,
             &resource_nodes,
             &drop_offs,
         );
@@ -50,6 +56,8 @@ pub fn gather_system(
     // Apply updates
     for (entity, update) in gatherer_updates {
         if let Ok((_, _sim_entity, owner, _pos, mut gatherer, _)) = gatherers.get_mut(entity) {
+            let modifiers = player_modifiers.get(owner.player_id);
+            
             match update {
                 GathererUpdate::SetState(state) => {
                     gatherer.state = state;
@@ -57,13 +65,19 @@ pub fn gather_system(
                 GathererUpdate::MoveTo(x, z) => {
                     commands.entity(entity).insert(MoveTarget::new(x, z));
                 }
-                GathererUpdate::Harvest(amount, node_entity) => {
+                GathererUpdate::Harvest(base_amount, node_entity, resource_type) => {
+                    // Apply gather rate bonus from techs
+                    let multiplier = modifiers.gather_rate_multiplier(resource_type);
+                    let amount = ((base_amount as f32) * multiplier).ceil() as u32;
+                    
                     // Actually harvest from the node
                     if let Ok((_, _, _, mut node)) = resource_nodes.get_mut(node_entity) {
                         let harvested = node.harvest(amount);
                         gatherer.add_resource(harvested);
                         
-                        if gatherer.is_full() {
+                        // Check if full using modified carry capacity
+                        let effective_capacity = modifiers.effective_carry_capacity(gatherer.carry_capacity);
+                        if gatherer.carry_amount >= effective_capacity {
                             gatherer.state = GathererState::ReturningToDropOff;
                             node.current_gatherers = node.current_gatherers.saturating_sub(1);
                         }
@@ -99,8 +113,9 @@ pub fn gather_system(
 enum GathererUpdate {
     SetState(GathererState),
     MoveTo(f32, f32),
-    Harvest(u32, Entity),
+    Harvest(u32, Entity, shared::ResourceType), // base amount, node entity, resource type
     Deposit,
+    #[allow(dead_code)]
     FindDropOff(shared::EntityId),
     ClearTarget,
 }
@@ -112,6 +127,7 @@ fn process_gatherer(
     pos: &SimPosition,
     gatherer: &Gatherer,
     _unit: &Unit,
+    modifiers: &crate::data::Modifiers,
     resource_nodes: &Query<(Entity, &SimEntity, &SimPosition, &mut ResourceNode)>,
     drop_offs: &Query<(Entity, &SimEntity, &SimPosition, &Owner), (With<DropOffPoint>, Without<Gatherer>)>,
 ) -> Option<GathererUpdate> {
@@ -134,7 +150,7 @@ fn process_gatherer(
                 .iter()
                 .find(|(_, sim_e, _, _)| sim_e.id == target_id);
 
-            let Some((node_entity, _, node_pos, node)) = node_info else {
+            let Some((_node_entity, _, node_pos, node)) = node_info else {
                 return Some(GathererUpdate::ClearTarget);
             };
 
@@ -165,7 +181,7 @@ fn process_gatherer(
                 .iter()
                 .find(|(_, sim_e, _, _)| sim_e.id == target_id);
 
-            let Some((node_entity, _, node_pos, node)) = node_info else {
+            let Some((node_entity, _, _node_pos, node)) = node_info else {
                 return Some(GathererUpdate::ClearTarget);
             };
 
@@ -174,14 +190,14 @@ fn process_gatherer(
                 return Some(GathererUpdate::ClearTarget);
             }
 
-            // Check if full
-            if gatherer.is_full() {
+            // Check if full (using modified capacity)
+            let effective_capacity = modifiers.effective_carry_capacity(gatherer.carry_capacity);
+            if gatherer.carry_amount >= effective_capacity {
                 return Some(GathererUpdate::SetState(GathererState::ReturningToDropOff));
             }
 
-            // Harvest (1 resource per tick for simplicity)
-            // In a real implementation, use gather_rate and accumulator
-            Some(GathererUpdate::Harvest(1, node_entity))
+            // Harvest - base rate is 1 per tick, modified by tech bonuses
+            Some(GathererUpdate::Harvest(1, node_entity, node.resource_type))
         }
 
         GathererState::ReturningToDropOff => {
@@ -201,7 +217,7 @@ fn process_gatherer(
                 }
             }
 
-            let Some((drop_id, drop_x, drop_z, distance)) = nearest_drop_off else {
+            let Some((_drop_id, drop_x, drop_z, distance)) = nearest_drop_off else {
                 // No drop-off found, stay idle
                 return Some(GathererUpdate::SetState(GathererState::Idle));
             };
@@ -221,4 +237,3 @@ fn process_gatherer(
         }
     }
 }
-

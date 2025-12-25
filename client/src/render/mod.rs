@@ -2,12 +2,16 @@
 //!
 //! Grid, units, buildings, and selection rendering.
 
+mod feedback;
 mod grid;
 mod selection;
+mod sprites;
 mod units;
 
+pub use feedback::*;
 pub use grid::*;
 pub use selection::*;
+pub use sprites::*;
 pub use units::*;
 
 use bevy::prelude::*;
@@ -16,15 +20,18 @@ pub struct RenderPlugin;
 
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (setup_grid, setup_materials))
+        app.add_plugins(VisualFeedbackPlugin)
+            .init_resource::<SpriteMaterials>()
+            .add_systems(Startup, (setup_grid, setup_materials, load_sprite_assets))
             .add_systems(
                 Update,
                 (
                     sync_transforms,
                     update_unit_visuals,
-                    update_building_visuals,
+                    update_building_visuals_sprite,
                     update_resource_node_visuals,
                     update_selection_visuals,
+                    billboard_system,
                 ),
             );
     }
