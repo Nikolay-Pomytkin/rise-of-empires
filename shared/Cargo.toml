@@ -1,0 +1,11 @@
+[package]
+name = "shared"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Shared types for Rise RTS: IDs, commands, resources, snapshots"
+
+[dependencies]
+serde = { workspace = true }
+

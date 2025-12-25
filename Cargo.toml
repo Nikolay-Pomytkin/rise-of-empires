@@ -1,0 +1,38 @@
+[workspace]
+members = ["shared", "sim", "client", "tools"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Rise RTS Team"]
+
+[workspace.dependencies]
+# Bevy ecosystem - pinned versions
+# Note: default-features not specified here so crates can override
+bevy = "0.17.0"
+bevy_egui = "0.37.0"
+
+# Serialization
+serde = { version = "1.0.217", features = ["derive"] }
+ron = "0.8.1"
+
+# Deterministic RNG
+rand = "0.9.0"
+rand_xoshiro = "0.7.0"
+rand_core = "0.9.0"
+
+# Hashing for determinism validation
+seahash = "4.1.0"
+
+# Internal crates
+shared = { path = "shared" }
+sim = { path = "sim" }
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+

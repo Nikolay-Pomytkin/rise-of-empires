@@ -1,0 +1,23 @@
+[package]
+name = "tools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Headless simulation runner and replay tools for Rise RTS"
+
+[[bin]]
+name = "headless_sim"
+path = "src/bin/headless_sim.rs"
+
+[[bin]]
+name = "replay_runner"
+path = "src/bin/replay_runner.rs"
+
+[dependencies]
+shared = { workspace = true }
+sim = { workspace = true }
+serde = { workspace = true }
+ron = { workspace = true }
+seahash = { workspace = true }
+

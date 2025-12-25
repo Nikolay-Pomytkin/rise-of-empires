@@ -1,0 +1,30 @@
+[package]
+name = "client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Bevy client for Rise RTS: rendering, input, UI"
+
+[dependencies]
+shared = { workspace = true }
+sim = { workspace = true }
+serde = { workspace = true }
+ron = { workspace = true }
+bevy = { workspace = true, features = [
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_picking",
+    "file_watcher",
+    "multi_threaded",
+    "x11",
+    "wayland",
+] }
+bevy_egui = { workspace = true }
+

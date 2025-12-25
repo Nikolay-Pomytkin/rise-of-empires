@@ -1,0 +1,27 @@
+[package]
+name = "sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Deterministic simulation core for Rise RTS"
+
+[features]
+default = ["deterministic_rng"]
+deterministic_rng = ["rand_xoshiro"]
+
+[dependencies]
+shared = { workspace = true }
+serde = { workspace = true }
+ron = { workspace = true }
+rand = { workspace = true }
+rand_xoshiro = { workspace = true, optional = true }
+rand_core = { workspace = true }
+seahash = { workspace = true }
+
+# Minimal bevy - just ECS, no rendering/windowing
+bevy_app = "0.17.0"
+bevy_ecs = "0.17.0"
+bevy_log = "0.17.0"
+bevy_time = "0.17.0"
+
