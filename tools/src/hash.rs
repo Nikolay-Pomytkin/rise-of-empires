@@ -119,4 +119,3 @@ pub fn snapshots_equal(a: &WorldSnapshot, b: &WorldSnapshot) -> bool {
 
     true
 }
-

@@ -8,15 +8,9 @@ use std::path::PathBuf;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    let ticks = args
-        .get(1)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(100);
+    let ticks = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(100);
 
-    let seed = args
-        .get(2)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(12345u64);
+    let seed = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(12345u64);
 
     let commands_file = args.get(3).map(PathBuf::from);
 
@@ -74,4 +68,3 @@ fn main() {
     println!("To validate determinism, run twice with same seed and commands.");
     println!("The final RNG state and snapshot hash should match.");
 }
-

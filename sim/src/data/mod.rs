@@ -9,4 +9,3 @@ pub mod unit_data;
 pub use game_data::*;
 pub use tech_data::*;
 pub use unit_data::*;
-

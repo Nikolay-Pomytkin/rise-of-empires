@@ -19,8 +19,12 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             EguiPrimaryContextPass,
-            (ui_resources_panel, ui_selection_panel, ui_tech_panel, ui_building_panel),
+            (
+                ui_resources_panel,
+                ui_selection_panel,
+                ui_tech_panel,
+                ui_building_panel,
+            ),
         );
     }
 }
-

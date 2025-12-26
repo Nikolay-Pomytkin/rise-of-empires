@@ -2,8 +2,8 @@
 
 use bevy::prelude::*;
 
-use crate::input::{BuildingPlacementState, InputState};
 use super::GameMaterials;
+use crate::input::{BuildingPlacementState, InputState};
 
 /// Marker component for placement ghost
 #[derive(Component)]
@@ -34,7 +34,7 @@ pub fn update_placement_ghost(
                 shared::BuildingType::TownCenter => 3.0,
                 shared::BuildingType::Barracks => 2.5,
             };
-            
+
             let pos = input_state.mouse_world_pos.unwrap_or(Vec3::ZERO);
             let tile_x = pos.x.round();
             let tile_z = pos.z.round();

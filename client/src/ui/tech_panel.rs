@@ -54,16 +54,24 @@ pub fn ui_tech_panel(
                         }
 
                         if button.hovered() {
-                            egui::show_tooltip(ui.ctx(), ui.layer_id(), egui::Id::new(&tech.id), |ui| {
-                                ui.label(&tech.description);
-                                ui.label(format!(
-                                    "Cost: {}F {}W {}G {}S",
-                                    tech.cost.food, tech.cost.wood, tech.cost.gold, tech.cost.stone
-                                ));
-                                if let Some(ref age) = tech.required_age {
-                                    ui.label(format!("Requires: {}", age));
-                                }
-                            });
+                            egui::show_tooltip(
+                                ui.ctx(),
+                                ui.layer_id(),
+                                egui::Id::new(&tech.id),
+                                |ui| {
+                                    ui.label(&tech.description);
+                                    ui.label(format!(
+                                        "Cost: {}F {}W {}G {}S",
+                                        tech.cost.food,
+                                        tech.cost.wood,
+                                        tech.cost.gold,
+                                        tech.cost.stone
+                                    ));
+                                    if let Some(ref age) = tech.required_age {
+                                        ui.label(format!("Requires: {}", age));
+                                    }
+                                },
+                            );
                         }
                     }
                 });
@@ -76,7 +84,11 @@ pub fn ui_tech_panel(
             for age in &tech_tree.ages {
                 let is_current = player.current_age.0 == age.id;
                 let can_advance = !is_current
-                    && age.requires.as_ref().map(|r| r == &player.current_age.0).unwrap_or(true);
+                    && age
+                        .requires
+                        .as_ref()
+                        .map(|r| r == &player.current_age.0)
+                        .unwrap_or(true);
 
                 ui.horizontal(|ui| {
                     if is_current {

@@ -28,4 +28,3 @@ fn receive_snapshots(
         latest.snapshot = Some(event.snapshot.clone());
     }
 }
-

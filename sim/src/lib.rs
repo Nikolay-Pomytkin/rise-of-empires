@@ -64,7 +64,7 @@ impl Default for SimPlugin {
 impl bevy_app::Plugin for SimPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         use bevy_app::FixedUpdate;
-        
+
         // Initialize tick scheduler
         let tick_config = TickConfig {
             tick_rate: self.tick_rate,
@@ -79,10 +79,7 @@ impl bevy_app::Plugin for SimPlugin {
             .insert_resource(GameData::default())
             .insert_resource(PlayerModifiers::default())
             .add_message::<SnapshotEvent>()
-            .add_systems(
-                FixedUpdate,
-                systems::process_commands,
-            )
+            .add_systems(FixedUpdate, systems::process_commands)
             .add_systems(
                 FixedUpdate,
                 systems::movement_system.after(systems::process_commands),

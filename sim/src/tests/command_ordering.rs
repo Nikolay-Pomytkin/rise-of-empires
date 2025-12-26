@@ -80,10 +80,26 @@ fn test_command_buffer_multi_tick() {
     let mut buffer = CommandBuffer::default();
 
     // Add commands for ticks 1, 2, 3
-    buffer.push_command(1, PlayerId::PLAYER_1, GameCommand::Stop { entities: vec![] });
-    buffer.push_command(2, PlayerId::PLAYER_1, GameCommand::Stop { entities: vec![] });
-    buffer.push_command(3, PlayerId::PLAYER_1, GameCommand::Stop { entities: vec![] });
-    buffer.push_command(2, PlayerId::PLAYER_2, GameCommand::Stop { entities: vec![] });
+    buffer.push_command(
+        1,
+        PlayerId::PLAYER_1,
+        GameCommand::Stop { entities: vec![] },
+    );
+    buffer.push_command(
+        2,
+        PlayerId::PLAYER_1,
+        GameCommand::Stop { entities: vec![] },
+    );
+    buffer.push_command(
+        3,
+        PlayerId::PLAYER_1,
+        GameCommand::Stop { entities: vec![] },
+    );
+    buffer.push_command(
+        2,
+        PlayerId::PLAYER_2,
+        GameCommand::Stop { entities: vec![] },
+    );
 
     // Drain tick 1
     let t1 = buffer.drain_for_tick(1);
@@ -110,11 +126,14 @@ fn test_late_commands() {
     let mut buffer = CommandBuffer::default();
 
     // Add command for tick 5
-    buffer.push_command(5, PlayerId::PLAYER_1, GameCommand::Stop { entities: vec![] });
+    buffer.push_command(
+        5,
+        PlayerId::PLAYER_1,
+        GameCommand::Stop { entities: vec![] },
+    );
 
     // Drain for tick 10 (command is late but should still be included)
     let commands = buffer.drain_for_tick(10);
     assert_eq!(commands.len(), 1);
     assert_eq!(commands[0].tick, 5);
 }
-

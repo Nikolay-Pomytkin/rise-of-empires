@@ -133,12 +133,7 @@ impl CommandBuffer {
     }
 
     /// Create and push a command for the current tick
-    pub fn push_command(
-        &mut self,
-        tick: u64,
-        player_id: PlayerId,
-        command: shared::GameCommand,
-    ) {
+    pub fn push_command(&mut self, tick: u64, player_id: PlayerId, command: shared::GameCommand) {
         let stamped = shared::StampedCommand::new(tick, player_id, self.command_sequence, command);
         self.command_sequence += 1;
         self.commands.push(stamped);
@@ -169,4 +164,3 @@ impl CommandBuffer {
         self.commands.len()
     }
 }
-

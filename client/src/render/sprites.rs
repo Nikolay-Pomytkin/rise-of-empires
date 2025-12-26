@@ -66,4 +66,3 @@ pub fn billboard_system(
         transform.rotation = Quat::from_rotation_y(angle);
     }
 }
-

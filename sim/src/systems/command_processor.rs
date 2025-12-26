@@ -92,7 +92,13 @@ pub fn process_commands(
             }
 
             GameCommand::Stop { entities } => {
-                handle_stop_command(&mut commands, &sim_world, &entities, stamped.player_id, &mut units);
+                handle_stop_command(
+                    &mut commands,
+                    &sim_world,
+                    &entities,
+                    stamped.player_id,
+                    &mut units,
+                );
             }
 
             GameCommand::Build { .. } => {
@@ -144,7 +150,9 @@ fn handle_move_command(
                     }
                 } else {
                     // Insert new
-                    commands.entity(entity).insert(MoveTarget::new(target_x, target_z));
+                    commands
+                        .entity(entity)
+                        .insert(MoveTarget::new(target_x, target_z));
                 }
             }
         }
@@ -167,7 +175,9 @@ fn handle_gather_command(
     resource_nodes: &Query<(Entity, &SimEntity, &ResourceNode)>,
 ) {
     // Find the resource node
-    let node_info = resource_nodes.iter().find(|(_, sim_entity, _)| sim_entity.id == node_id);
+    let node_info = resource_nodes
+        .iter()
+        .find(|(_, sim_entity, _)| sim_entity.id == node_id);
 
     let Some((_, _, resource_node)) = node_info else {
         return;
@@ -298,4 +308,3 @@ fn handle_stop_command(
         }
     }
 }
-

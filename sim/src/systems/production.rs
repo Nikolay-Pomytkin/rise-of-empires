@@ -44,15 +44,17 @@ pub fn production_system(
             // Remove completed item and spawn unit
             if let Some(item) = queue.items.first() {
                 let unit_type = item.unit_type;
-                
+
                 // Calculate spawn position
-                let spawn_offset = spawn_point.map(|sp| (sp.offset_x, sp.offset_z)).unwrap_or((0.0, 2.5));
+                let spawn_offset = spawn_point
+                    .map(|sp| (sp.offset_x, sp.offset_z))
+                    .unwrap_or((0.0, 2.5));
                 let spawn_x = pos.x + spawn_offset.0;
                 let spawn_z = pos.z + spawn_offset.1;
 
                 spawns.push((owner.player_id, unit_type, spawn_x, spawn_z));
             }
-            
+
             // Remove the completed item
             queue.items.remove(0);
         }
@@ -121,4 +123,3 @@ fn spawn_unit(
         player.population += unit_type.population_cost();
     }
 }
-

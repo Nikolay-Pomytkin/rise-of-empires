@@ -2,8 +2,8 @@
 //!
 //! 3D orthographic camera with pan and zoom controls.
 
-use bevy::prelude::*;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
+use bevy::prelude::*;
 
 pub struct CameraPlugin;
 
@@ -224,4 +224,3 @@ fn camera_edge_pan(
         transform.translation += direction * settings.pan_speed * 0.5 * time.delta_secs();
     }
 }
-

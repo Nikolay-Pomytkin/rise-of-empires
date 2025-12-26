@@ -1,13 +1,11 @@
 //! Snapshot generation system
 
 use bevy_ecs::prelude::*;
-use shared::{EntitySnapshot, EntityType, PlayerSnapshot, ProductionQueueState, QueueItem, WorldSnapshot};
-
-use crate::{
-    components::*,
-    world::SimWorld,
-    SnapshotEvent, TickScheduler,
+use shared::{
+    EntitySnapshot, EntityType, PlayerSnapshot, ProductionQueueState, QueueItem, WorldSnapshot,
 };
+
+use crate::{components::*, world::SimWorld, SnapshotEvent, TickScheduler};
 
 /// Generate a world snapshot for rendering
 #[allow(deprecated)]
@@ -31,7 +29,19 @@ pub fn generate_snapshot(
     let mut snapshot = WorldSnapshot::new(tick.tick());
 
     // Collect entity snapshots
-    for (sim_entity, pos, owner, health, selected, unit, building, resource_node, gatherer, queue) in entities.iter() {
+    for (
+        sim_entity,
+        pos,
+        owner,
+        health,
+        selected,
+        unit,
+        building,
+        resource_node,
+        gatherer,
+        queue,
+    ) in entities.iter()
+    {
         let entity_type = if let Some(u) = unit {
             EntityType::Unit(u.unit_type)
         } else if let Some(b) = building {
@@ -57,11 +67,15 @@ pub fn generate_snapshot(
                 is_returning: g.state == GathererState::ReturningToDropOff,
             }),
             production_queue: queue.map(|q| ProductionQueueState {
-                items: q.items.iter().map(|item| QueueItem {
-                    unit_type: item.unit_type,
-                    ticks_remaining: item.ticks_remaining,
-                    total_ticks: item.total_ticks,
-                }).collect(),
+                items: q
+                    .items
+                    .iter()
+                    .map(|item| QueueItem {
+                        unit_type: item.unit_type,
+                        ticks_remaining: item.ticks_remaining,
+                        total_ticks: item.total_ticks,
+                    })
+                    .collect(),
             }),
             resource_remaining: resource_node.map(|r| r.remaining),
         };

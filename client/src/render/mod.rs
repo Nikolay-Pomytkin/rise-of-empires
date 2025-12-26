@@ -117,9 +117,10 @@ fn setup_materials(mut commands: Commands, mut materials: ResMut<Assets<Standard
 }
 
 /// Sync Bevy Transform from SimPosition
-fn sync_transforms(mut query: Query<(&sim::SimPosition, &mut Transform), Changed<sim::SimPosition>>) {
+fn sync_transforms(
+    mut query: Query<(&sim::SimPosition, &mut Transform), Changed<sim::SimPosition>>,
+) {
     for (sim_pos, mut transform) in query.iter_mut() {
         transform.translation = sim_pos_to_vec3(sim_pos);
     }
 }
-

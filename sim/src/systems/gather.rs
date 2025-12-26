@@ -8,27 +8,29 @@
 
 use bevy_ecs::prelude::*;
 
-use crate::{
-    components::*,
-    data::PlayerModifiers,
-    world::SimWorld,
-};
+use crate::{components::*, data::PlayerModifiers, world::SimWorld};
 
 /// Gather system - handles the full gather cycle
 pub fn gather_system(
     mut commands: Commands,
     mut sim_world: ResMut<SimWorld>,
     player_modifiers: Res<PlayerModifiers>,
-    mut gatherers: Query<(
-        Entity,
-        &SimEntity,
-        &Owner,
-        &SimPosition,
-        &mut Gatherer,
-        &Unit,
-    ), Without<ResourceNode>>,
+    mut gatherers: Query<
+        (
+            Entity,
+            &SimEntity,
+            &Owner,
+            &SimPosition,
+            &mut Gatherer,
+            &Unit,
+        ),
+        Without<ResourceNode>,
+    >,
     mut resource_nodes: Query<(Entity, &SimEntity, &SimPosition, &mut ResourceNode)>,
-    drop_offs: Query<(Entity, &SimEntity, &SimPosition, &Owner), (With<DropOffPoint>, Without<Gatherer>)>,
+    drop_offs: Query<
+        (Entity, &SimEntity, &SimPosition, &Owner),
+        (With<DropOffPoint>, Without<Gatherer>),
+    >,
 ) {
     // Collect gatherer updates to avoid borrow conflicts
     let mut gatherer_updates: Vec<(Entity, GathererUpdate)> = Vec::new();
@@ -36,7 +38,7 @@ pub fn gather_system(
     for (entity, sim_entity, owner, pos, gatherer, unit) in gatherers.iter() {
         // Get player modifiers for gather rate
         let modifiers = player_modifiers.get(owner.player_id);
-        
+
         let update = process_gatherer(
             entity,
             sim_entity,
@@ -57,7 +59,7 @@ pub fn gather_system(
     for (entity, update) in gatherer_updates {
         if let Ok((_, _sim_entity, owner, _pos, mut gatherer, _)) = gatherers.get_mut(entity) {
             let modifiers = player_modifiers.get(owner.player_id);
-            
+
             match update {
                 GathererUpdate::SetState(state) => {
                     gatherer.state = state;
@@ -69,14 +71,15 @@ pub fn gather_system(
                     // Apply gather rate bonus from techs
                     let multiplier = modifiers.gather_rate_multiplier(resource_type);
                     let amount = ((base_amount as f32) * multiplier).ceil() as u32;
-                    
+
                     // Actually harvest from the node
                     if let Ok((_, _, _, mut node)) = resource_nodes.get_mut(node_entity) {
                         let harvested = node.harvest(amount);
                         gatherer.add_resource(harvested);
-                        
+
                         // Check if full using modified carry capacity
-                        let effective_capacity = modifiers.effective_carry_capacity(gatherer.carry_capacity);
+                        let effective_capacity =
+                            modifiers.effective_carry_capacity(gatherer.carry_capacity);
                         if gatherer.carry_amount >= effective_capacity {
                             gatherer.state = GathererState::ReturningToDropOff;
                             node.current_gatherers = node.current_gatherers.saturating_sub(1);
@@ -90,7 +93,7 @@ pub fn gather_system(
                         bundle.set(resource_type, amount);
                         player.add_resources(&bundle);
                     }
-                    
+
                     // Go back to gathering if we have a target
                     if gatherer.target_node.is_some() {
                         gatherer.state = GathererState::MovingToNode;
@@ -129,7 +132,10 @@ fn process_gatherer(
     _unit: &Unit,
     modifiers: &crate::data::Modifiers,
     resource_nodes: &Query<(Entity, &SimEntity, &SimPosition, &mut ResourceNode)>,
-    drop_offs: &Query<(Entity, &SimEntity, &SimPosition, &Owner), (With<DropOffPoint>, Without<Gatherer>)>,
+    drop_offs: &Query<
+        (Entity, &SimEntity, &SimPosition, &Owner),
+        (With<DropOffPoint>, Without<Gatherer>),
+    >,
 ) -> Option<GathererUpdate> {
     match gatherer.state {
         GathererState::Idle => {
@@ -232,8 +238,6 @@ fn process_gatherer(
             Some(GathererUpdate::MoveTo(drop_x, drop_z))
         }
 
-        GathererState::Depositing => {
-            Some(GathererUpdate::Deposit)
-        }
+        GathererState::Depositing => Some(GathererUpdate::Deposit),
     }
 }

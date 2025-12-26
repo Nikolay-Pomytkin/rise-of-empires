@@ -20,7 +20,7 @@ pub fn ui_building_panel(
             if ui.button("Barracks").clicked() {
                 placement.placing = Some(shared::BuildingType::Barracks);
             }
-            
+
             if placement.placing.is_some() {
                 ui.separator();
                 if ui.button("Cancel [Esc]").clicked() {

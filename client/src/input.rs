@@ -2,9 +2,9 @@
 //!
 //! Selection, commands, and input state management.
 
+use bevy::ecs::message::{Message, MessageReader, MessageWriter};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy::ecs::message::{Message, MessageWriter, MessageReader};
 
 pub struct InputPlugin;
 
@@ -86,8 +86,12 @@ pub enum SelectionEvent {
 /// Command event (from input to bridge)
 #[derive(Message, Clone)]
 pub enum CommandEvent {
-    Move { target: Vec3 },
-    Gather { node: Entity },
+    Move {
+        target: Vec3,
+    },
+    Gather {
+        node: Entity,
+    },
     Stop,
     Build {
         building_type: shared::BuildingType,
@@ -111,9 +115,11 @@ fn handle_mouse_input(
     selection_state: Res<SelectionState>,
 ) {
     let Ok(window) = windows.single() else { return };
-    let Ok((camera, camera_transform)) = camera.single() else { return };
+    let Ok((camera, camera_transform)) = camera.single() else {
+        return;
+    };
     let placement_mode = placement_state.placing.is_some();
-    
+
     // Update mouse world position
     if let Some(cursor_pos) = window.cursor_position() {
         if let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_pos) {
@@ -138,10 +144,10 @@ fn handle_mouse_input(
                 // Convert to tile coordinates
                 let tile_x = world_pos.x.round() as i32;
                 let tile_z = world_pos.z.round() as i32;
-                
-                command_events.write(CommandEvent::Build { 
-                    building_type, 
-                    tile_x, 
+
+                command_events.write(CommandEvent::Build {
+                    building_type,
+                    tile_x,
                     tile_z,
                 });
                 placement_state.placing = None;
@@ -160,7 +166,8 @@ fn handle_mouse_input(
     }
 
     if mouse.just_released(MouseButton::Left) {
-        let shift_held = keyboard.pressed(KeyCode::ShiftLeft) || keyboard.pressed(KeyCode::ShiftRight);
+        let shift_held =
+            keyboard.pressed(KeyCode::ShiftLeft) || keyboard.pressed(KeyCode::ShiftRight);
 
         if input_state.dragging {
             // Drag box selection is handled in update_drag_box
@@ -168,7 +175,8 @@ fn handle_mouse_input(
             // Click selection
             if let Some(world_pos) = input_state.mouse_world_pos {
                 // Find entity under cursor
-                let clicked = find_entity_at_position(&selectable, world_pos, selection_state.active_player);
+                let clicked =
+                    find_entity_at_position(&selectable, world_pos, selection_state.active_player);
 
                 if let Some(entity) = clicked {
                     if shift_held {
@@ -192,7 +200,8 @@ fn handle_mouse_input(
         if !selection_state.is_empty() {
             if let Some(world_pos) = input_state.mouse_world_pos {
                 // Check if clicking on a resource node
-                let clicked_node = find_resource_node_at_position(&selectable, &resource_nodes, world_pos);
+                let clicked_node =
+                    find_resource_node_at_position(&selectable, &resource_nodes, world_pos);
 
                 if let Some(node_entity) = clicked_node {
                     command_events.write(CommandEvent::Gather { node: node_entity });
@@ -226,8 +235,12 @@ fn update_drag_box(
     }
 
     let Ok(window) = windows.single() else { return };
-    let Some(start) = input_state.left_mouse_start else { return };
-    let Some(current) = window.cursor_position() else { return };
+    let Some(start) = input_state.left_mouse_start else {
+        return;
+    };
+    let Some(current) = window.cursor_position() else {
+        return;
+    };
 
     // Check if dragging
     let drag_threshold = 5.0;
@@ -239,13 +252,16 @@ fn update_drag_box(
 
     // If drag box released, select entities in box
     if input_state.dragging && !input_state.left_mouse_held {
-        let Ok((camera, camera_transform)) = camera.single() else { return };
+        let Ok((camera, camera_transform)) = camera.single() else {
+            return;
+        };
 
         // Get box corners in world space
         let min_screen = start.min(current);
         let max_screen = start.max(current);
 
-        let shift_held = keyboard.pressed(KeyCode::ShiftLeft) || keyboard.pressed(KeyCode::ShiftRight);
+        let shift_held =
+            keyboard.pressed(KeyCode::ShiftLeft) || keyboard.pressed(KeyCode::ShiftRight);
 
         // Find all entities in the box
         let mut selected_entities = Vec::new();
@@ -362,7 +378,11 @@ fn process_commands(
             CommandEvent::Stop => shared::GameCommand::Stop {
                 entities: entity_ids,
             },
-            CommandEvent::Build { building_type, tile_x, tile_z } => {
+            CommandEvent::Build {
+                building_type,
+                tile_x,
+                tile_z,
+            } => {
                 // Find first villager in selection to be the builder
                 let builder_id = selection_state
                     .selected

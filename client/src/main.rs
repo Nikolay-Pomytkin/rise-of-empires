@@ -220,4 +220,3 @@ fn spawn_resource_node(
 
     sim_world.register_entity(sim_id, entity);
 }
-

@@ -34,4 +34,3 @@ pub struct Villager;
 /// Marker for soldier units (stub for future combat)
 #[derive(Component, Clone, Debug, Default)]
 pub struct Soldier;
-

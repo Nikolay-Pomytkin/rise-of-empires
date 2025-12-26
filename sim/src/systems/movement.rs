@@ -170,4 +170,3 @@ impl Formation {
         Vec::new()
     }
 }
-

@@ -61,12 +61,7 @@ fn main() {
     println!();
 
     // Determine final tick
-    let final_tick = replay
-        .checkpoints
-        .iter()
-        .map(|c| c.tick)
-        .max()
-        .unwrap_or(0);
+    let final_tick = replay.checkpoints.iter().map(|c| c.tick).max().unwrap_or(0);
 
     if final_tick == 0 {
         println!("No checkpoints to validate!");
@@ -100,7 +95,10 @@ fn main() {
     println!();
 
     if validation_passed {
-        println!("Replay validation: PASSED ({} checkpoints)", validated_count);
+        println!(
+            "Replay validation: PASSED ({} checkpoints)",
+            validated_count
+        );
     } else {
         println!("Replay validation: FAILED");
         std::process::exit(1);
@@ -110,4 +108,3 @@ fn main() {
     println!("TODO: Implement full replay validation with actual simulation");
     println!("TODO: Replay recording/playback");
 }
-

@@ -134,4 +134,3 @@ impl Selected {
         self.by_players.retain(|&p| p != player_id);
     }
 }
-

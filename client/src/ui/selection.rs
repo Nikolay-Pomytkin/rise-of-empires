@@ -11,8 +11,20 @@ pub fn ui_selection_panel(
     selection_state: Res<SelectionState>,
     tick: Res<sim::TickScheduler>,
     mut command_buffer: ResMut<sim::CommandBuffer>,
-    units: Query<(&sim::SimEntity, &sim::Owner, Option<&sim::Unit>, Option<&sim::Health>, Option<&sim::Gatherer>)>,
-    buildings: Query<(&sim::SimEntity, &sim::Owner, &sim::Building, Option<&sim::ProductionQueue>, Option<&sim::Health>)>,
+    units: Query<(
+        &sim::SimEntity,
+        &sim::Owner,
+        Option<&sim::Unit>,
+        Option<&sim::Health>,
+        Option<&sim::Gatherer>,
+    )>,
+    buildings: Query<(
+        &sim::SimEntity,
+        &sim::Owner,
+        &sim::Building,
+        Option<&sim::ProductionQueue>,
+        Option<&sim::Health>,
+    )>,
 ) {
     if selection_state.is_empty() {
         return;
@@ -42,7 +54,10 @@ pub fn ui_selection_panel(
                         ui.horizontal(|ui| {
                             ui.label("HP:");
                             let progress = health.current as f32 / health.max as f32;
-                            ui.add(egui::ProgressBar::new(progress).text(format!("{}/{}", health.current, health.max)));
+                            ui.add(
+                                egui::ProgressBar::new(progress)
+                                    .text(format!("{}/{}", health.current, health.max)),
+                            );
                         });
                     }
 
@@ -66,7 +81,10 @@ pub fn ui_selection_panel(
                         ui.horizontal(|ui| {
                             ui.label("HP:");
                             let progress = health.current as f32 / health.max as f32;
-                            ui.add(egui::ProgressBar::new(progress).text(format!("{}/{}", health.current, health.max)));
+                            ui.add(
+                                egui::ProgressBar::new(progress)
+                                    .text(format!("{}/{}", health.current, health.max)),
+                            );
                         });
                     }
 
@@ -83,7 +101,9 @@ pub fn ui_selection_panel(
                                     ui.label(format!("{}. {:?}", i + 1, item.unit_type));
                                     if i == 0 {
                                         let progress = item.progress();
-                                        ui.add(egui::ProgressBar::new(progress).desired_width(80.0));
+                                        ui.add(
+                                            egui::ProgressBar::new(progress).desired_width(80.0),
+                                        );
                                     }
                                 });
                             }

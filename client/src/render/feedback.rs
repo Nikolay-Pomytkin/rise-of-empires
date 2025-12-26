@@ -9,13 +9,16 @@ pub struct VisualFeedbackPlugin;
 
 impl Plugin for VisualFeedbackPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (
-            spawn_health_bars,
-            update_health_bars,
-            update_gathering_indicators,
-            spawn_floating_text,
-            update_floating_text,
-        ));
+        app.add_systems(
+            Update,
+            (
+                spawn_health_bars,
+                update_health_bars,
+                update_gathering_indicators,
+                spawn_floating_text,
+                update_floating_text,
+            ),
+        );
     }
 }
 
@@ -59,17 +62,19 @@ fn spawn_health_bars(
         let bar_y_offset = 1.2; // Above the entity
 
         // Background (dark)
-        let bg_entity = commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(bar_width, bar_height, 0.02))),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: Color::srgba(0.1, 0.1, 0.1, 0.8),
-                unlit: true,
-                alpha_mode: AlphaMode::Blend,
-                ..default()
-            })),
-            Transform::from_xyz(pos.x, bar_y_offset, pos.z),
-            HealthBarBackground { parent: entity },
-        )).id();
+        let bg_entity = commands
+            .spawn((
+                Mesh3d(meshes.add(Cuboid::new(bar_width, bar_height, 0.02))),
+                MeshMaterial3d(materials.add(StandardMaterial {
+                    base_color: Color::srgba(0.1, 0.1, 0.1, 0.8),
+                    unlit: true,
+                    alpha_mode: AlphaMode::Blend,
+                    ..default()
+                })),
+                Transform::from_xyz(pos.x, bar_y_offset, pos.z),
+                HealthBarBackground { parent: entity },
+            ))
+            .id();
 
         // Fill (green/yellow/red based on health)
         let health_percent = health.current as f32 / health.max as f32;
@@ -101,7 +106,12 @@ fn update_health_bars(
     mut materials: ResMut<Assets<StandardMaterial>>,
     entities: Query<(&sim::SimPosition, &sim::Health)>,
     mut backgrounds: Query<(Entity, &HealthBarBackground, &mut Transform), Without<HealthBarFill>>,
-    mut fills: Query<(Entity, &HealthBarFill, &mut Transform, &MeshMaterial3d<StandardMaterial>)>,
+    mut fills: Query<(
+        Entity,
+        &HealthBarFill,
+        &mut Transform,
+        &MeshMaterial3d<StandardMaterial>,
+    )>,
 ) {
     let bar_width = 0.8;
     let bar_height = 0.08;
@@ -245,8 +255,7 @@ pub struct SpawnFloatingTextEvent {
     pub color: Color,
 }
 
-fn spawn_floating_text(
-    // For now, this is a stub - would need text rendering setup
+fn spawn_floating_text(// For now, this is a stub - would need text rendering setup
     // In a full implementation, you'd use bevy's text2d or a billboard text system
 ) {
     // TODO: Implement floating text spawning
@@ -268,10 +277,9 @@ fn update_floating_text(
 
         // Move upward and fade
         transform.translation += text.velocity * time.delta_secs();
-        
+
         // Scale down as it fades
         let alpha = 1.0 - (text.lifetime / text.max_lifetime);
         transform.scale = Vec3::splat(alpha);
     }
 }
-

@@ -31,7 +31,10 @@ pub fn setup_grid(
 
     // Create ground plane
     commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(config.size as f32 * config.tile_size, config.size as f32 * config.tile_size))),
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(
+            config.size as f32 * config.tile_size,
+            config.size as f32 * config.tile_size,
+        ))),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color: Color::srgb(0.15, 0.25, 0.1),
             perceptual_roughness: 0.9,
@@ -56,7 +59,11 @@ pub fn setup_grid(
     for i in 0..=config.size {
         let z = -half_size + i as f32 * config.tile_size;
         commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(config.size as f32 * config.tile_size, line_height, line_thickness))),
+            Mesh3d(meshes.add(Cuboid::new(
+                config.size as f32 * config.tile_size,
+                line_height,
+                line_thickness,
+            ))),
             MeshMaterial3d(grid_material.clone()),
             Transform::from_xyz(0.0, 0.0, z),
         ));
@@ -66,10 +73,13 @@ pub fn setup_grid(
     for i in 0..=config.size {
         let x = -half_size + i as f32 * config.tile_size;
         commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(line_thickness, line_height, config.size as f32 * config.tile_size))),
+            Mesh3d(meshes.add(Cuboid::new(
+                line_thickness,
+                line_height,
+                config.size as f32 * config.tile_size,
+            ))),
             MeshMaterial3d(grid_material.clone()),
             Transform::from_xyz(x, 0.0, 0.0),
         ));
     }
 }
-

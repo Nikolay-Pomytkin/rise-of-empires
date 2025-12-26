@@ -81,4 +81,3 @@ impl From<&str> for AgeId {
         Self(s.to_string())
     }
 }
-

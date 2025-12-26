@@ -14,4 +14,3 @@ pub fn tech_system() {
 }
 
 // Tech data loading and effect application is in data/tech_data.rs
-

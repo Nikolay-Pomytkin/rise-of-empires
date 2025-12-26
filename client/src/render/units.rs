@@ -28,7 +28,7 @@ fn get_sprite_material(
     let mat = materials.add(StandardMaterial {
         base_color_texture: Some(texture.clone()),
         alpha_mode: AlphaMode::Blend,
-        unlit: true, // Don't apply lighting to sprites
+        unlit: true,     // Don't apply lighting to sprites
         cull_mode: None, // Show both sides
         ..default()
     });
@@ -49,14 +49,18 @@ pub fn update_unit_visuals(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
-    let Some(game_materials) = game_materials else { return };
+    let Some(game_materials) = game_materials else {
+        return;
+    };
 
     for (entity, pos, owner, unit) in units.iter() {
         // Check if we have a sprite for this unit type
-        let sprite_handle = sprite_assets.as_ref().and_then(|assets| match unit.unit_type {
-            shared::UnitType::Villager => assets.villager.clone(),
-            shared::UnitType::Soldier => assets.soldier.clone(),
-        });
+        let sprite_handle = sprite_assets
+            .as_ref()
+            .and_then(|assets| match unit.unit_type {
+                shared::UnitType::Villager => assets.villager.clone(),
+                shared::UnitType::Soldier => assets.soldier.clone(),
+            });
 
         if let Some(texture) = sprite_handle {
             // Use textured quad billboard
@@ -111,14 +115,19 @@ pub fn update_building_visuals_sprite(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
-    let Some(game_materials) = game_materials else { return };
+    let Some(game_materials) = game_materials else {
+        return;
+    };
 
     for (entity, pos, owner, building) in buildings.iter() {
         // Check if we have a sprite for this building type
-        let sprite_handle = sprite_assets.as_ref().and_then(|assets| match building.building_type {
-            shared::BuildingType::TownCenter => assets.town_center.clone(),
-            shared::BuildingType::Barracks => assets.barracks.clone(),
-        });
+        let sprite_handle =
+            sprite_assets
+                .as_ref()
+                .and_then(|assets| match building.building_type {
+                    shared::BuildingType::TownCenter => assets.town_center.clone(),
+                    shared::BuildingType::Barracks => assets.barracks.clone(),
+                });
 
         if let Some(texture) = sprite_handle {
             // Use textured quad billboard
@@ -185,16 +194,20 @@ pub fn update_resource_node_visuals(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
-    let Some(game_materials) = game_materials else { return };
+    let Some(game_materials) = game_materials else {
+        return;
+    };
 
     for (entity, pos, node) in nodes.iter() {
         // Check if we have a sprite for this resource type
-        let sprite_handle = sprite_assets.as_ref().and_then(|assets| match node.resource_type {
-            shared::ResourceType::Food => assets.berry_bush.clone(),
-            shared::ResourceType::Wood => assets.tree.clone(),
-            shared::ResourceType::Gold => assets.gold_mine.clone(),
-            shared::ResourceType::Stone => assets.stone_quarry.clone(),
-        });
+        let sprite_handle = sprite_assets
+            .as_ref()
+            .and_then(|assets| match node.resource_type {
+                shared::ResourceType::Food => assets.berry_bush.clone(),
+                shared::ResourceType::Wood => assets.tree.clone(),
+                shared::ResourceType::Gold => assets.gold_mine.clone(),
+                shared::ResourceType::Stone => assets.stone_quarry.clone(),
+            });
 
         if let Some(texture) = sprite_handle {
             // Use textured quad billboard

@@ -58,7 +58,10 @@ impl Default for UnitDefs {
                     id: "villager".to_string(),
                     name: "Villager".to_string(),
                     unit_type: UnitType::Villager,
-                    cost: UnitCost { food: 50, ..Default::default() },
+                    cost: UnitCost {
+                        food: 50,
+                        ..Default::default()
+                    },
                     train_time_ticks: 50,
                     hp: 25,
                     speed: 2.0,
@@ -71,7 +74,11 @@ impl Default for UnitDefs {
                     id: "soldier".to_string(),
                     name: "Soldier".to_string(),
                     unit_type: UnitType::Soldier,
-                    cost: UnitCost { food: 60, gold: 20, ..Default::default() },
+                    cost: UnitCost {
+                        food: 60,
+                        gold: 20,
+                        ..Default::default()
+                    },
                     train_time_ticks: 60,
                     hp: 40,
                     speed: 2.5,
@@ -84,4 +91,3 @@ impl Default for UnitDefs {
         }
     }
 }
-

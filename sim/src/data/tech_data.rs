@@ -1,14 +1,17 @@
 //! Tech tree data structures and loading
 
 use serde::{Deserialize, Serialize};
-use shared::{ResourceBundle, ResourceType, TechId, AgeId};
+use shared::{AgeId, ResourceBundle, ResourceType, TechId};
 use std::collections::HashMap;
 
 /// Effect that a technology can apply
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TechEffect {
     /// Bonus to gather rate for a resource type (percentage)
-    GatherRateBonus { resource: ResourceType, percent: i32 },
+    GatherRateBonus {
+        resource: ResourceType,
+        percent: i32,
+    },
     /// Bonus to carry capacity (flat amount)
     CarryCapacityBonus { amount: i32 },
     /// Bonus to build speed (percentage)
@@ -105,12 +108,7 @@ impl TechTree {
     }
 
     /// Check if a tech can be researched given current state
-    pub fn can_research(
-        &self,
-        tech_id: &str,
-        current_age: &str,
-        researched: &[String],
-    ) -> bool {
+    pub fn can_research(&self, tech_id: &str, current_age: &str, researched: &[String]) -> bool {
         let Some(tech) = self.get_tech(tech_id) else {
             return false;
         };
@@ -157,7 +155,12 @@ impl Default for TechTree {
                     id: "feudal_age".to_string(),
                     name: "Feudal Age".to_string(),
                     order: 2,
-                    cost: TechCost { food: 500, wood: 0, gold: 0, stone: 0 },
+                    cost: TechCost {
+                        food: 500,
+                        wood: 0,
+                        gold: 0,
+                        stone: 0,
+                    },
                     advance_time_ticks: 260, // 13 seconds at 20 Hz
                     requires: Some("dark_age".to_string()),
                 },
@@ -167,7 +170,12 @@ impl Default for TechTree {
                     id: "loom".to_string(),
                     name: "Loom".to_string(),
                     description: "Villagers +15 HP".to_string(),
-                    cost: TechCost { food: 0, wood: 0, gold: 50, stone: 0 },
+                    cost: TechCost {
+                        food: 0,
+                        wood: 0,
+                        gold: 50,
+                        stone: 0,
+                    },
                     research_time_ticks: 50,
                     effects: vec![TechEffect::UnitHpBonus { percent: 15 }],
                     requires: vec![],
@@ -177,13 +185,30 @@ impl Default for TechTree {
                     id: "wheelbarrow".to_string(),
                     name: "Wheelbarrow".to_string(),
                     description: "+10% gather rate, +3 carry capacity".to_string(),
-                    cost: TechCost { food: 175, wood: 50, gold: 0, stone: 0 },
+                    cost: TechCost {
+                        food: 175,
+                        wood: 50,
+                        gold: 0,
+                        stone: 0,
+                    },
                     research_time_ticks: 150,
                     effects: vec![
-                        TechEffect::GatherRateBonus { resource: ResourceType::Food, percent: 10 },
-                        TechEffect::GatherRateBonus { resource: ResourceType::Wood, percent: 10 },
-                        TechEffect::GatherRateBonus { resource: ResourceType::Gold, percent: 10 },
-                        TechEffect::GatherRateBonus { resource: ResourceType::Stone, percent: 10 },
+                        TechEffect::GatherRateBonus {
+                            resource: ResourceType::Food,
+                            percent: 10,
+                        },
+                        TechEffect::GatherRateBonus {
+                            resource: ResourceType::Wood,
+                            percent: 10,
+                        },
+                        TechEffect::GatherRateBonus {
+                            resource: ResourceType::Gold,
+                            percent: 10,
+                        },
+                        TechEffect::GatherRateBonus {
+                            resource: ResourceType::Stone,
+                            percent: 10,
+                        },
                         TechEffect::CarryCapacityBonus { amount: 3 },
                     ],
                     requires: vec![],
@@ -193,11 +218,17 @@ impl Default for TechTree {
                     id: "double_bit_axe".to_string(),
                     name: "Double-Bit Axe".to_string(),
                     description: "+20% wood gathering".to_string(),
-                    cost: TechCost { food: 100, wood: 50, gold: 0, stone: 0 },
+                    cost: TechCost {
+                        food: 100,
+                        wood: 50,
+                        gold: 0,
+                        stone: 0,
+                    },
                     research_time_ticks: 50,
-                    effects: vec![
-                        TechEffect::GatherRateBonus { resource: ResourceType::Wood, percent: 20 },
-                    ],
+                    effects: vec![TechEffect::GatherRateBonus {
+                        resource: ResourceType::Wood,
+                        percent: 20,
+                    }],
                     requires: vec![],
                     required_age: Some("feudal_age".to_string()),
                 },
@@ -220,16 +251,15 @@ mod tests {
     #[test]
     fn test_can_research() {
         let tree = TechTree::default();
-        
+
         // Loom available in dark age
         assert!(tree.can_research("loom", "dark_age", &[]));
-        
+
         // Wheelbarrow requires feudal age
         assert!(!tree.can_research("wheelbarrow", "dark_age", &[]));
         assert!(tree.can_research("wheelbarrow", "feudal_age", &[]));
-        
+
         // Can't research already researched tech
         assert!(!tree.can_research("loom", "dark_age", &["loom".to_string()]));
     }
 }
-

@@ -9,9 +9,7 @@ use crate::components::*;
 
 /// Combat system - handles attacks and damage
 /// Currently just a stub that ticks cooldowns
-pub fn combat_system(
-    mut units: Query<(Entity, &mut CombatStats, &mut Health)>,
-) {
+pub fn combat_system(mut units: Query<(Entity, &mut CombatStats, &mut Health)>) {
     // Tick cooldowns
     for (_, mut stats, _) in units.iter_mut() {
         stats.tick_cooldown();
@@ -65,4 +63,3 @@ pub struct DeathEvent {
     pub entity: Entity,
     pub killer: Option<Entity>,
 }
-

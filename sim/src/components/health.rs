@@ -101,4 +101,3 @@ impl CombatStats {
         self.cooldown_remaining = self.attack_cooldown;
     }
 }
-

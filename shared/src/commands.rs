@@ -62,10 +62,7 @@ pub enum GameCommand {
     },
 
     /// Research a technology at a building
-    ResearchTech {
-        building: EntityId,
-        tech_id: TechId,
-    },
+    ResearchTech { building: EntityId, tech_id: TechId },
 
     /// Cancel a production queue item
     CancelProduction {
@@ -74,9 +71,7 @@ pub enum GameCommand {
     },
 
     /// Stop current action for entities
-    Stop {
-        entities: Vec<EntityId>,
-    },
+    Stop { entities: Vec<EntityId> },
 }
 
 /// A command stamped with tick and player information for determinism
@@ -128,4 +123,3 @@ impl Ord for StampedCommand {
             .then_with(|| self.sequence.cmp(&other.sequence))
     }
 }
-

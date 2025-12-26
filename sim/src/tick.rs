@@ -64,4 +64,3 @@ impl Default for TickScheduler {
         Self::new(20)
     }
 }
-

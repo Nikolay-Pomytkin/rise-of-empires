@@ -4,7 +4,7 @@ use bevy_ecs::prelude::*;
 use shared::{PlayerId, ResourceType};
 use std::collections::HashMap;
 
-use crate::data::{TechTree, TechEffect, UnitDefs};
+use crate::data::{TechEffect, TechTree, UnitDefs};
 
 /// Resource holding all game data loaded from RON files
 #[derive(Resource)]
@@ -27,7 +27,10 @@ impl GameData {
     pub fn load(tech_ron: &str, units_ron: &str) -> Result<Self, ron::error::SpannedError> {
         let tech_tree: TechTree = ron::from_str(tech_ron)?;
         let unit_defs: UnitDefs = ron::from_str(units_ron)?;
-        Ok(Self { tech_tree, unit_defs })
+        Ok(Self {
+            tech_tree,
+            unit_defs,
+        })
     }
 }
 
@@ -47,7 +50,12 @@ impl PlayerModifiers {
     }
 
     /// Recalculate modifiers for a player based on their researched techs
-    pub fn recalculate(&mut self, player_id: PlayerId, researched_techs: &[String], tech_tree: &TechTree) {
+    pub fn recalculate(
+        &mut self,
+        player_id: PlayerId,
+        researched_techs: &[String],
+        tech_tree: &TechTree,
+    ) {
         let mods = self.get_mut(player_id);
         *mods = Modifiers::default();
 
@@ -122,4 +130,3 @@ impl Modifiers {
         (base as i32 + self.carry_capacity_bonus).max(1) as u32
     }
 }
-

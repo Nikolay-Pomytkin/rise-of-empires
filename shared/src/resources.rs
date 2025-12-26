@@ -122,4 +122,3 @@ impl std::ops::AddAssign for ResourceBundle {
         self.add(&other);
     }
 }
-
