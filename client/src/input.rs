@@ -36,12 +36,21 @@ pub struct InputState {
 }
 
 /// Current selection state
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct SelectionState {
     /// Currently selected entities
     pub selected: Vec<Entity>,
     /// Active player (for multiplayer, would be set differently)
     pub active_player: shared::PlayerId,
+}
+
+impl Default for SelectionState {
+    fn default() -> Self {
+        Self {
+            selected: Vec::new(),
+            active_player: shared::PlayerId::PLAYER_1,
+        }
+    }
 }
 
 #[derive(Resource, Default)]

@@ -232,4 +232,3 @@ cargo install cargo-deb
 See `.github/workflows/ci.yml` for automated builds on GitHub Actions.
 
 For release builds, consider using GitHub Releases with artifacts uploaded from CI.
-
