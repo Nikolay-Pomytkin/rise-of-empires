@@ -2,12 +2,14 @@
 //!
 //! Grid, units, buildings, and selection rendering.
 
+mod building;
 mod feedback;
 mod grid;
 mod selection;
 mod sprites;
 mod units;
 
+pub use building::*;
 pub use feedback::*;
 pub use grid::*;
 pub use selection::*;
@@ -32,6 +34,7 @@ impl Plugin for RenderPlugin {
                     update_resource_node_visuals,
                     update_selection_visuals,
                     billboard_system,
+                    update_placement_ghost,
                 ),
             );
     }

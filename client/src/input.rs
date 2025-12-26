@@ -12,6 +12,7 @@ impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(InputState::default())
             .insert_resource(SelectionState::default())
+            .insert_resource(BuildingPlacementState::default())
             .add_message::<SelectionEvent>()
             .add_message::<CommandEvent>()
             .add_systems(Update, handle_mouse_input)
@@ -41,6 +42,12 @@ pub struct SelectionState {
     pub selected: Vec<Entity>,
     /// Active player (for multiplayer, would be set differently)
     pub active_player: shared::PlayerId,
+}
+
+#[derive(Resource, Default)]
+pub struct BuildingPlacementState {
+    pub placing: Option<shared::BuildingType>,
+    pub valid: bool,
 }
 
 impl SelectionState {
@@ -82,6 +89,11 @@ pub enum CommandEvent {
     Move { target: Vec3 },
     Gather { node: Entity },
     Stop,
+    Build {
+        building_type: shared::BuildingType,
+        tile_x: i32,
+        tile_z: i32,
+    },
 }
 
 /// Handle mouse input
@@ -91,6 +103,7 @@ fn handle_mouse_input(
     windows: Query<&Window, With<PrimaryWindow>>,
     camera: Query<(&Camera, &GlobalTransform), With<crate::camera::MainCamera>>,
     mut input_state: ResMut<InputState>,
+    mut placement_state: ResMut<BuildingPlacementState>,
     mut selection_events: MessageWriter<SelectionEvent>,
     mut command_events: MessageWriter<CommandEvent>,
     selectable: Query<(Entity, &sim::SimPosition, &sim::Owner), With<sim::SimEntity>>,
@@ -99,7 +112,8 @@ fn handle_mouse_input(
 ) {
     let Ok(window) = windows.single() else { return };
     let Ok((camera, camera_transform)) = camera.single() else { return };
-
+    let placement_mode = placement_state.placing.is_some();
+    
     // Update mouse world position
     if let Some(cursor_pos) = window.cursor_position() {
         if let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_pos) {
@@ -109,6 +123,31 @@ fn handle_mouse_input(
                 input_state.mouse_world_pos = Some(ray.origin + ray.direction * t);
             }
         }
+    }
+
+    // Escape cancels placement
+    if keyboard.just_pressed(KeyCode::Escape) && placement_mode {
+        placement_state.placing = None;
+        return;
+    }
+
+    // Left click while placing = confirm placement
+    if mouse.just_pressed(MouseButton::Left) && placement_mode {
+        if let Some(building_type) = placement_state.placing {
+            if let Some(world_pos) = input_state.mouse_world_pos {
+                // Convert to tile coordinates
+                let tile_x = world_pos.x.round() as i32;
+                let tile_z = world_pos.z.round() as i32;
+                
+                command_events.write(CommandEvent::Build { 
+                    building_type, 
+                    tile_x, 
+                    tile_z,
+                });
+                placement_state.placing = None;
+            }
+        }
+        return; // Don't do normal selection
     }
 
     // Left mouse button - selection
@@ -291,6 +330,7 @@ fn process_commands(
     tick: Res<sim::TickScheduler>,
     mut command_buffer: ResMut<sim::CommandBuffer>,
     sim_entities: Query<&sim::SimEntity>,
+    units: Query<&sim::Unit>,
 ) {
     for event in command_events.read() {
         let entity_ids: Vec<shared::EntityId> = selection_state
@@ -322,6 +362,34 @@ fn process_commands(
             CommandEvent::Stop => shared::GameCommand::Stop {
                 entities: entity_ids,
             },
+            CommandEvent::Build { building_type, tile_x, tile_z } => {
+                // Find first villager in selection to be the builder
+                let builder_id = selection_state
+                    .selected
+                    .iter()
+                    .filter_map(|e| {
+                        let sim_entity = sim_entities.get(*e).ok()?;
+                        let unit = units.get(*e).ok()?;
+                        if unit.unit_type == shared::UnitType::Villager {
+                            Some(sim_entity.id)
+                        } else {
+                            None
+                        }
+                    })
+                    .next();
+
+                if let Some(builder) = builder_id {
+                    shared::GameCommand::Build {
+                        builder,
+                        building_type: *building_type,
+                        tile_x: *tile_x,
+                        tile_z: *tile_z,
+                    }
+                } else {
+                    // No villager selected, can't build
+                    continue;
+                }
+            }
         };
 
         command_buffer.push_command(
