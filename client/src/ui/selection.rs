@@ -1,4 +1,4 @@
-//! Selection UI panel - Rise of Nations inspired
+//! Selection UI panel
 //!
 //! Bottom-right panel showing selected unit/building info
 
@@ -13,7 +13,7 @@ const TEXT_COLOR: egui::Color32 = egui::Color32::from_rgb(220, 220, 220);
 const HP_BAR_BG: egui::Color32 = egui::Color32::from_rgb(60, 20, 20);
 const HP_BAR_FG: egui::Color32 = egui::Color32::from_rgb(50, 200, 50);
 
-/// Display selection info in RoN style (bottom-right)
+/// Display selection info (bottom-right)
 pub fn ui_selection_panel(
     mut contexts: EguiContexts,
     selection_state: Res<SelectionState>,
@@ -234,7 +234,7 @@ fn render_building_panel(
         ui.add_space(10.0);
         ui.separator();
 
-        // Train buttons (RoN style - icon buttons)
+        // Train buttons
         ui.horizontal(|ui| {
             if ui
                 .add(egui::Button::new("🧑‍🌾 Villager").min_size(egui::vec2(80.0, 30.0)))

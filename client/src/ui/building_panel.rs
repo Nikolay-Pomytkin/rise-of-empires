@@ -1,4 +1,4 @@
-//! Building placement panel - Rise of Nations inspired
+//! Building placement panel
 //!
 //! Bottom bar with building buttons
 
@@ -20,7 +20,7 @@ pub fn ui_building_panel(
 
     let screen_rect = ctx.screen_rect();
 
-    // Bottom-left command panel (like RoN)
+    // Bottom-left command panel
     egui::Area::new(egui::Id::new("building_panel"))
         .fixed_pos(egui::pos2(10.0, screen_rect.height() - 70.0))
         .show(ctx, |ui| {

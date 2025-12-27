@@ -1,4 +1,4 @@
-//! Resources UI panel - Rise of Nations inspired
+//! Resources UI panel
 //!
 //! Top-left: Resources with amounts and income
 //! Top-center: Age and nation
@@ -9,13 +9,13 @@ use bevy_egui::{egui, EguiContexts};
 
 use crate::input::SelectionState;
 
-/// Custom dark theme colors inspired by RoN
+/// Custom dark theme colors
 const PANEL_BG: egui::Color32 = egui::Color32::from_rgba_premultiplied(20, 20, 30, 230);
 const RESOURCE_TEXT: egui::Color32 = egui::Color32::from_rgb(255, 255, 220);
 const INCOME_POSITIVE: egui::Color32 = egui::Color32::from_rgb(100, 255, 100);
 const INCOME_NEGATIVE: egui::Color32 = egui::Color32::from_rgb(255, 100, 100);
 
-// Resource colors (matching RoN style)
+// Resource colors
 const FOOD_COLOR: egui::Color32 = egui::Color32::from_rgb(150, 255, 150);
 const WOOD_COLOR: egui::Color32 = egui::Color32::from_rgb(180, 140, 90);
 const GOLD_COLOR: egui::Color32 = egui::Color32::from_rgb(255, 215, 0);
@@ -23,7 +23,7 @@ const STONE_COLOR: egui::Color32 = egui::Color32::from_rgb(160, 160, 180);
 const KNOWLEDGE_COLOR: egui::Color32 = egui::Color32::from_rgb(100, 180, 255);
 const METAL_COLOR: egui::Color32 = egui::Color32::from_rgb(200, 200, 220);
 
-/// Display player resources in RoN style
+/// Display player resources
 pub fn ui_resources_panel(
     mut contexts: EguiContexts,
     sim_world: Res<sim::SimWorld>,
@@ -62,10 +62,10 @@ pub fn ui_resources_panel(
                         // Wood
                         resource_row(ui, "🪵", "Wood", player.resources.wood, 0, WOOD_COLOR);
 
-                        // Gold (Wealth in RoN)
+                        // Gold
                         resource_row(ui, "🪙", "Gold", player.resources.gold, 0, GOLD_COLOR);
 
-                        // Stone (Metal in RoN)
+                        // Stone
                         resource_row(ui, "🪨", "Stone", player.resources.stone, 0, STONE_COLOR);
                     });
                 });

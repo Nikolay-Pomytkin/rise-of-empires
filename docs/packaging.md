@@ -192,7 +192,7 @@ Priority: optional
 Architecture: amd64
 Depends: libasound2, libudev1
 Maintainer: Your Name <your@email.com>
-Description: Rise of Nations-inspired RTS game
+Description: Rise RTS
  A real-time strategy game built with Rust and Bevy.
 EOF
 

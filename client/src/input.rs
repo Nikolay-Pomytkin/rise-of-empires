@@ -6,6 +6,8 @@ use bevy::ecs::message::{Message, MessageReader, MessageWriter};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
+use crate::game_state::GameState;
+
 pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
@@ -15,10 +17,16 @@ impl Plugin for InputPlugin {
             .insert_resource(BuildingPlacementState::default())
             .add_message::<SelectionEvent>()
             .add_message::<CommandEvent>()
-            .add_systems(Update, handle_mouse_input)
-            .add_systems(Update, update_drag_box.after(handle_mouse_input))
-            .add_systems(Update, process_selection.after(update_drag_box))
-            .add_systems(Update, process_commands.after(process_selection));
+            .add_systems(
+                Update,
+                (
+                    handle_mouse_input,
+                    update_drag_box.after(handle_mouse_input),
+                    process_selection.after(update_drag_box),
+                    process_commands.after(process_selection),
+                )
+                    .run_if(in_state(GameState::InGame)),
+            );
     }
 }
 

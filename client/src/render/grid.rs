@@ -12,9 +12,22 @@ pub struct GridConfig {
 impl Default for GridConfig {
     fn default() -> Self {
         Self {
-            size: 50,
+            size: 200, // 200x200 tile map
             tile_size: 1.0,
         }
+    }
+}
+
+impl GridConfig {
+    /// Get the half-size of the map in world units
+    pub fn half_size(&self) -> f32 {
+        (self.size as f32 * self.tile_size) / 2.0
+    }
+
+    /// Get the map bounds (min_x, max_x, min_z, max_z)
+    pub fn bounds(&self) -> (f32, f32, f32, f32) {
+        let half = self.half_size();
+        (-half, half, -half, half)
     }
 }
 
@@ -27,7 +40,7 @@ pub fn setup_grid(
     let config = GridConfig::default();
     commands.insert_resource(config.clone());
 
-    let half_size = (config.size as f32 * config.tile_size) / 2.0;
+    let half_size = config.half_size();
 
     // Create ground plane
     commands.spawn((
@@ -43,7 +56,7 @@ pub fn setup_grid(
         Transform::from_xyz(0.0, -0.01, 0.0),
     ));
 
-    // Create grid lines
+    // Create grid lines (every 10 tiles to avoid too many draw calls)
     let grid_material = materials.add(StandardMaterial {
         base_color: Color::srgba(0.2, 0.2, 0.2, 0.3),
         unlit: true,
@@ -54,9 +67,10 @@ pub fn setup_grid(
     // Create line mesh (thin box)
     let line_thickness = 0.02;
     let line_height = 0.001;
+    let grid_spacing = 10; // Draw a line every 10 tiles
 
     // Horizontal lines (along X)
-    for i in 0..=config.size {
+    for i in (0..=config.size).step_by(grid_spacing) {
         let z = -half_size + i as f32 * config.tile_size;
         commands.spawn((
             Mesh3d(meshes.add(Cuboid::new(
@@ -70,7 +84,7 @@ pub fn setup_grid(
     }
 
     // Vertical lines (along Z)
-    for i in 0..=config.size {
+    for i in (0..=config.size).step_by(grid_spacing) {
         let x = -half_size + i as f32 * config.tile_size;
         commands.spawn((
             Mesh3d(meshes.add(Cuboid::new(

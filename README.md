@@ -1,6 +1,6 @@
 # Rise RTS
 
-A Rise of Nations-inspired real-time strategy game built with Rust and Bevy 0.17.
+A real-time strategy game built with Rust and Bevy 0.17.
 
 ## Features
 
@@ -88,7 +88,7 @@ Snapshots can be hashed for replay validation.
 ### New Units
 
 1. Add unit type to `shared/src/commands.rs` (`UnitType` enum)
-2. Add unit definition to `assets/data/units.ron`
+2. Add unit definition to `assets/data/units.roe`
 3. Add component setup in `sim/src/systems/production.rs`
 4. Add visual rendering in `client/src/render/units.rs`
 
@@ -100,7 +100,7 @@ Snapshots can be hashed for replay validation.
 
 ### New Technologies
 
-1. Edit `assets/data/techs.ron` to add new tech definitions
+1. Edit `assets/data/techs.roe` to add new tech definitions
 2. Tech effects are automatically applied through the modifier system
 3. Available effects:
    - `GatherRateBonus { resource, percent }`
@@ -127,8 +127,8 @@ Snapshots can be hashed for replay validation.
 
 Game data is stored in RON format for easy editing:
 
-- `assets/data/techs.ron` - Technology tree definitions
-- `assets/data/units.ron` - Unit type definitions
+- `assets/data/techs.roe` - Technology tree definitions
+- `assets/data/units.roe` - Unit type definitions
 
 Hot reloading is enabled - changes to these files are picked up automatically.
 

@@ -7,12 +7,14 @@ use bevy_egui::EguiPlugin;
 
 mod bridge;
 mod camera;
+mod game_state;
 mod input;
 mod render;
 mod ui;
 
 use bridge::BridgePlugin;
 use camera::CameraPlugin;
+use game_state::{GameState, GameStatePlugin};
 use input::InputPlugin;
 use render::RenderPlugin;
 use ui::UiPlugin;
@@ -36,6 +38,7 @@ fn main() {
                 }),
         )
         .add_plugins(EguiPlugin::default())
+        .add_plugins(GameStatePlugin)
         .add_plugins(sim::SimPlugin::default())
         .add_plugins((
             CameraPlugin,
@@ -44,7 +47,7 @@ fn main() {
             UiPlugin,
             BridgePlugin,
         ))
-        .add_systems(Startup, setup_game)
+        .add_systems(OnEnter(GameState::InGame), setup_game)
         .run();
 }
 
@@ -54,6 +57,9 @@ fn setup_game(
     mut sim_world: ResMut<sim::SimWorld>,
     mut id_gen: ResMut<sim::EntityIdGenerator>,
 ) {
+    // Clear any existing state
+    // TODO: Proper cleanup when returning to main menu
+
     // Add players
     sim_world.add_player(shared::PlayerId::PLAYER_1);
     sim_world.add_player(shared::PlayerId::PLAYER_2);

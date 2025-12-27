@@ -5,13 +5,20 @@
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 
+use crate::game_state::GameState;
+use crate::render::GridConfig;
+
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(CameraSettings::default())
             .add_systems(Startup, setup_camera)
-            .add_systems(Update, (camera_pan, camera_zoom, camera_edge_pan));
+            .add_systems(
+                Update,
+                (camera_pan, camera_zoom, camera_edge_pan, clamp_camera_to_bounds)
+                    .run_if(in_state(GameState::InGame)),
+            );
     }
 }
 
@@ -223,4 +230,28 @@ fn camera_edge_pan(
         direction = direction.normalize();
         transform.translation += direction * settings.pan_speed * 0.5 * time.delta_secs();
     }
+}
+
+/// Clamp camera position to map boundaries
+fn clamp_camera_to_bounds(
+    grid_config: Option<Res<GridConfig>>,
+    mut camera: Query<(&mut Transform, &CameraState), With<MainCamera>>,
+) {
+    let Some(config) = grid_config else {
+        return;
+    };
+
+    let Ok((mut transform, state)) = camera.single_mut() else {
+        return;
+    };
+
+    let (min_x, max_x, min_z, max_z) = config.bounds();
+
+    // Add some padding based on zoom level so we don't see past the edge
+    // With orthographic projection, higher zoom = seeing more area
+    let padding = state.zoom * 100.0; // Approximate visible area padding
+
+    // Clamp the camera's X and Z position (Y stays fixed for the viewing angle)
+    transform.translation.x = transform.translation.x.clamp(min_x + padding, max_x - padding);
+    transform.translation.z = transform.translation.z.clamp(min_z + padding, max_z - padding);
 }
