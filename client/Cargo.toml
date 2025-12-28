@@ -13,7 +13,7 @@ serde = { workspace = true }
 ron = { workspace = true }
 bevy_egui = { workspace = true }
 
-# Bevy with minimal features for WASM (no PBR to reduce size)
+# Bevy with 2D-only features (no PBR for smaller WASM)
 [dependencies.bevy]
 workspace = true
 default-features = false
@@ -23,10 +23,10 @@ features = [
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_sprite",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_picking",
+    "bevy_state",
+    "bevy_log",
     "webgl2",
+    "png",
 ]
 
 # Native-only dependencies
@@ -40,7 +40,7 @@ web-sys = { workspace = true }
 js-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 
-# Native: add back PBR and other features
+# Native: add back extra features for development
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
 workspace = true
 default-features = false
@@ -50,12 +50,14 @@ features = [
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_sprite",
-    "bevy_pbr",
     "bevy_text",
     "bevy_ui",
     "bevy_picking",
+    "bevy_state",
+    "bevy_log",
     "file_watcher",
     "multi_threaded",
     "x11",
     "wayland",
+    "png",
 ]

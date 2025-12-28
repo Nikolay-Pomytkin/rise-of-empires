@@ -1,6 +1,7 @@
 //! Camera controller
 //!
-//! 3D orthographic camera with pan and zoom controls.
+//! 2D orthographic camera with pan and zoom controls.
+//! Uses a top-down view with Y-axis representing depth (for sprite sorting).
 
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -29,9 +30,9 @@ pub struct CameraSettings {
     pub pan_speed: f32,
     /// Zoom speed
     pub zoom_speed: f32,
-    /// Minimum zoom (closest)
+    /// Minimum zoom (closest - larger scale)
     pub min_zoom: f32,
-    /// Maximum zoom (furthest)
+    /// Maximum zoom (furthest - smaller scale)
     pub max_zoom: f32,
     /// Edge pan margin in pixels
     pub edge_pan_margin: f32,
@@ -42,10 +43,10 @@ pub struct CameraSettings {
 impl Default for CameraSettings {
     fn default() -> Self {
         Self {
-            pan_speed: 20.0,
-            zoom_speed: 0.01,
-            min_zoom: 0.01,
-            max_zoom: 0.2,
+            pan_speed: 500.0,
+            zoom_speed: 0.1,
+            min_zoom: 0.5,   // Zoomed in
+            max_zoom: 3.0,   // Zoomed out
             edge_pan_margin: 20.0,
             edge_pan_enabled: true,
         }
@@ -64,50 +65,23 @@ pub struct CameraState {
 
 impl Default for CameraState {
     fn default() -> Self {
-        Self { zoom: 0.05 } // Smaller = more zoomed in for orthographic
+        Self { zoom: 1.0 }
     }
 }
 
 fn setup_camera(mut commands: Commands) {
-    // Spawn 3D orthographic camera at 45-degree angle
     let camera_state = CameraState::default();
-    let zoom = camera_state.zoom;
 
-    // Position camera looking down at ~45 degrees from above
-    let camera_height = 30.0;
-    let camera_back = 30.0;
-
-    let camera_pos = Vec3::new(0.0, camera_height, camera_back);
-
+    // Spawn 2D camera with custom projection
     commands.spawn((
-        Camera3d::default(),
+        Camera2d,
         Projection::Orthographic(OrthographicProjection {
-            scale: zoom,
-            near: -1000.0,
-            far: 1000.0,
-            ..OrthographicProjection::default_3d()
+            scale: camera_state.zoom,
+            ..OrthographicProjection::default_2d()
         }),
-        Transform::from_translation(camera_pos).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 0.0, 1000.0), // High Z to see all sprites
         MainCamera,
         camera_state,
-    ));
-
-    // Add ambient light
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 500.0,
-        affects_lightmapped_meshes: false,
-    });
-
-    // Add directional light (sun)
-    commands.spawn((
-        DirectionalLight {
-            color: Color::srgb(1.0, 0.95, 0.9),
-            illuminance: 10000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(10.0, 20.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }
 
@@ -116,39 +90,34 @@ fn camera_pan(
     keyboard: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     settings: Res<CameraSettings>,
-    mut camera: Query<&mut Transform, With<MainCamera>>,
+    mut camera: Query<(&mut Transform, &CameraState), With<MainCamera>>,
 ) {
-    let Ok(mut transform) = camera.single_mut() else {
+    let Ok((mut transform, state)) = camera.single_mut() else {
         return;
     };
 
-    let mut direction = Vec3::ZERO;
+    let mut direction = Vec2::ZERO;
 
-    // Get camera's forward and right vectors projected onto XZ plane
-    let forward = transform.forward();
-    let right = transform.right();
-
-    // Project onto XZ plane for RTS-style movement
-    let forward_xz = Vec3::new(forward.x, 0.0, forward.z).normalize_or_zero();
-    let right_xz = Vec3::new(right.x, 0.0, right.z).normalize_or_zero();
-
-    // WASD / Arrow keys
+    // WASD / Arrow keys - in 2D, X is left/right, Y is up/down
     if keyboard.pressed(KeyCode::KeyW) || keyboard.pressed(KeyCode::ArrowUp) {
-        direction += forward_xz;
+        direction.y += 1.0;
     }
     if keyboard.pressed(KeyCode::KeyS) || keyboard.pressed(KeyCode::ArrowDown) {
-        direction -= forward_xz;
+        direction.y -= 1.0;
     }
     if keyboard.pressed(KeyCode::KeyA) || keyboard.pressed(KeyCode::ArrowLeft) {
-        direction -= right_xz;
+        direction.x -= 1.0;
     }
     if keyboard.pressed(KeyCode::KeyD) || keyboard.pressed(KeyCode::ArrowRight) {
-        direction += right_xz;
+        direction.x += 1.0;
     }
 
-    if direction != Vec3::ZERO {
+    if direction != Vec2::ZERO {
         direction = direction.normalize();
-        transform.translation += direction * settings.pan_speed * time.delta_secs();
+        // Scale pan speed by zoom level so it feels consistent
+        let adjusted_speed = settings.pan_speed * state.zoom;
+        transform.translation.x += direction.x * adjusted_speed * time.delta_secs();
+        transform.translation.y += direction.y * adjusted_speed * time.delta_secs();
     }
 }
 
@@ -168,8 +137,8 @@ fn camera_zoom(
             MouseScrollUnit::Pixel => event.y / 100.0,
         };
 
-        // Zoom in/out
-        state.zoom -= scroll_amount * settings.zoom_speed;
+        // Zoom in/out (scroll up = zoom in = smaller scale)
+        state.zoom -= scroll_amount * settings.zoom_speed * state.zoom;
         state.zoom = state.zoom.clamp(settings.min_zoom, settings.max_zoom);
 
         if let Projection::Orthographic(ref mut ortho) = *projection {
@@ -183,7 +152,7 @@ fn camera_edge_pan(
     windows: Query<&Window>,
     settings: Res<CameraSettings>,
     time: Res<Time>,
-    mut camera: Query<&mut Transform, With<MainCamera>>,
+    mut camera: Query<(&mut Transform, &CameraState), With<MainCamera>>,
 ) {
     if !settings.edge_pan_enabled {
         return;
@@ -197,7 +166,7 @@ fn camera_edge_pan(
         return;
     };
 
-    let Ok(mut transform) = camera.single_mut() else {
+    let Ok((mut transform, state)) = camera.single_mut() else {
         return;
     };
 
@@ -205,30 +174,27 @@ fn camera_edge_pan(
     let width = window.width();
     let height = window.height();
 
-    let mut direction = Vec3::ZERO;
-
-    // Get camera's forward and right vectors projected onto XZ plane
-    let forward = transform.forward();
-    let right = transform.right();
-    let forward_xz = Vec3::new(forward.x, 0.0, forward.z).normalize_or_zero();
-    let right_xz = Vec3::new(right.x, 0.0, right.z).normalize_or_zero();
+    let mut direction = Vec2::ZERO;
 
     // Check edges
     if cursor_pos.x < margin {
-        direction -= right_xz;
+        direction.x -= 1.0;
     } else if cursor_pos.x > width - margin {
-        direction += right_xz;
+        direction.x += 1.0;
     }
 
+    // Note: screen Y is inverted (0 at top)
     if cursor_pos.y < margin {
-        direction += forward_xz;
+        direction.y += 1.0;
     } else if cursor_pos.y > height - margin {
-        direction -= forward_xz;
+        direction.y -= 1.0;
     }
 
-    if direction != Vec3::ZERO {
+    if direction != Vec2::ZERO {
         direction = direction.normalize();
-        transform.translation += direction * settings.pan_speed * 0.5 * time.delta_secs();
+        let adjusted_speed = settings.pan_speed * 0.5 * state.zoom;
+        transform.translation.x += direction.x * adjusted_speed * time.delta_secs();
+        transform.translation.y += direction.y * adjusted_speed * time.delta_secs();
     }
 }
 
@@ -236,6 +202,7 @@ fn camera_edge_pan(
 fn clamp_camera_to_bounds(
     grid_config: Option<Res<GridConfig>>,
     mut camera: Query<(&mut Transform, &CameraState), With<MainCamera>>,
+    windows: Query<&Window>,
 ) {
     let Some(config) = grid_config else {
         return;
@@ -245,13 +212,29 @@ fn clamp_camera_to_bounds(
         return;
     };
 
-    let (min_x, max_x, min_z, max_z) = config.bounds();
+    let Ok(window) = windows.single() else {
+        return;
+    };
 
-    // Add some padding based on zoom level so we don't see past the edge
-    // With orthographic projection, higher zoom = seeing more area
-    let padding = state.zoom * 100.0; // Approximate visible area padding
+    // In 2D, the map is on XY plane
+    // Convert grid bounds to 2D (grid uses X/Z, we use X/Y)
+    let half_size = config.half_size();
+    
+    // Calculate visible area based on zoom and window size
+    let visible_width = window.width() * state.zoom / 2.0;
+    let visible_height = window.height() * state.zoom / 2.0;
 
-    // Clamp the camera's X and Z position (Y stays fixed for the viewing angle)
-    transform.translation.x = transform.translation.x.clamp(min_x + padding, max_x - padding);
-    transform.translation.z = transform.translation.z.clamp(min_z + padding, max_z - padding);
+    // Clamp camera position
+    let min_x = -half_size + visible_width;
+    let max_x = half_size - visible_width;
+    let min_y = -half_size + visible_height;
+    let max_y = half_size - visible_height;
+
+    // Only clamp if the map is larger than the visible area
+    if max_x > min_x {
+        transform.translation.x = transform.translation.x.clamp(min_x, max_x);
+    }
+    if max_y > min_y {
+        transform.translation.y = transform.translation.y.clamp(min_y, max_y);
+    }
 }

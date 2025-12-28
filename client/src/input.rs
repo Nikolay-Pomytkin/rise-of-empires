@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::game_state::GameState;
+use crate::render::TILE_SIZE;
 
 pub struct InputPlugin;
 
@@ -39,7 +40,7 @@ pub struct InputState {
     pub left_mouse_start: Option<Vec2>,
     /// Is a drag box active?
     pub dragging: bool,
-    /// Current mouse world position
+    /// Current mouse world position (in 2D world coordinates)
     pub mouse_world_pos: Option<Vec3>,
 }
 
@@ -117,6 +118,18 @@ pub enum CommandEvent {
     },
 }
 
+/// Convert screen position to world position in 2D
+fn screen_to_world_2d(
+    cursor_pos: Vec2,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) -> Option<Vec3> {
+    camera.viewport_to_world_2d(camera_transform, cursor_pos).ok().map(|pos| {
+        // Return as Vec3 with Z=0 (ground plane)
+        Vec3::new(pos.x, pos.y, 0.0)
+    })
+}
+
 /// Handle mouse input
 fn handle_mouse_input(
     mouse: Res<ButtonInput<MouseButton>>,
@@ -137,15 +150,9 @@ fn handle_mouse_input(
     };
     let placement_mode = placement_state.placing.is_some();
 
-    // Update mouse world position
+    // Update mouse world position (2D)
     if let Some(cursor_pos) = window.cursor_position() {
-        if let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_pos) {
-            // Intersect with Y=0 plane
-            let t = -ray.origin.y / ray.direction.y;
-            if t > 0.0 {
-                input_state.mouse_world_pos = Some(ray.origin + ray.direction * t);
-            }
-        }
+        input_state.mouse_world_pos = screen_to_world_2d(cursor_pos, camera, camera_transform);
     }
 
     // Escape cancels placement
@@ -158,9 +165,9 @@ fn handle_mouse_input(
     if mouse.just_pressed(MouseButton::Left) && placement_mode {
         if let Some(building_type) = placement_state.placing {
             if let Some(world_pos) = input_state.mouse_world_pos {
-                // Convert to tile coordinates
-                let tile_x = world_pos.x.round() as i32;
-                let tile_z = world_pos.z.round() as i32;
+                // Convert to tile coordinates (world pos is in pixels, divide by TILE_SIZE)
+                let tile_x = (world_pos.x / TILE_SIZE).round() as i32;
+                let tile_z = (world_pos.y / TILE_SIZE).round() as i32; // Y in 2D = Z in sim
 
                 command_events.write(CommandEvent::Build {
                     building_type,
@@ -289,8 +296,10 @@ fn update_drag_box(
                 continue;
             }
 
+            // Convert sim position to 2D world position
+            let world_pos = Vec3::new(pos.x * TILE_SIZE, pos.z * TILE_SIZE, 0.0);
+            
             // Project entity position to screen
-            let world_pos = Vec3::new(pos.x, pos.y, pos.z);
             if let Ok(screen_pos) = camera.world_to_viewport(camera_transform, world_pos) {
                 if screen_pos.x >= min_screen.x
                     && screen_pos.x <= max_screen.x
@@ -377,11 +386,16 @@ fn process_commands(
         }
 
         let command = match event {
-            CommandEvent::Move { target } => shared::GameCommand::Move {
-                entities: entity_ids,
-                target_x: target.x,
-                target_z: target.z,
-            },
+            CommandEvent::Move { target } => {
+                // Convert 2D world position (pixels) to sim coordinates
+                let target_x = target.x / TILE_SIZE;
+                let target_z = target.y / TILE_SIZE; // 2D Y = sim Z
+                shared::GameCommand::Move {
+                    entities: entity_ids,
+                    target_x,
+                    target_z,
+                }
+            }
             CommandEvent::Gather { node } => {
                 if let Ok(sim_entity) = sim_entities.get(*node) {
                     shared::GameCommand::Gather {
@@ -442,19 +456,22 @@ fn find_entity_at_position(
     world_pos: Vec3,
     active_player: shared::PlayerId,
 ) -> Option<Entity> {
-    let click_radius = 1.0;
+    let click_radius = TILE_SIZE * 1.0; // Click radius in pixels
 
     let mut closest: Option<(Entity, f32)> = None;
 
     for (entity, pos, owner) in selectable.iter() {
-        // Prefer own units
-        let distance = ((pos.x - world_pos.x).powi(2) + (pos.z - world_pos.z).powi(2)).sqrt();
+        // Convert sim position to 2D world position (pixels)
+        let entity_x = pos.x * TILE_SIZE;
+        let entity_y = pos.z * TILE_SIZE; // sim Z = 2D Y
+
+        let distance = ((entity_x - world_pos.x).powi(2) + (entity_y - world_pos.y).powi(2)).sqrt();
 
         if distance < click_radius {
             let priority_distance = if owner.player_id == active_player {
                 distance
             } else {
-                distance + 0.5 // Slight penalty for enemy units
+                distance + TILE_SIZE * 0.5 // Slight penalty for enemy units
             };
 
             if closest.is_none() || priority_distance < closest.unwrap().1 {
@@ -471,14 +488,18 @@ fn find_resource_node_at_position(
     resource_nodes: &Query<Entity, With<sim::ResourceNode>>,
     world_pos: Vec3,
 ) -> Option<Entity> {
-    let click_radius = 1.5;
+    let click_radius = TILE_SIZE * 1.5;
 
     for (entity, pos, _) in selectable.iter() {
         if !resource_nodes.contains(entity) {
             continue;
         }
 
-        let distance = ((pos.x - world_pos.x).powi(2) + (pos.z - world_pos.z).powi(2)).sqrt();
+        // Convert sim position to 2D world position (pixels)
+        let entity_x = pos.x * TILE_SIZE;
+        let entity_y = pos.z * TILE_SIZE;
+
+        let distance = ((entity_x - world_pos.x).powi(2) + (entity_y - world_pos.y).powi(2)).sqrt();
 
         if distance < click_radius {
             return Some(entity);

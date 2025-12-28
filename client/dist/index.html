@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="description" content="Rise RTS - A real-time strategy game">
     <title>Rise RTS</title>
-    <link rel="icon" href="/favicon-c920ca43256fdcb9.ico" integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb"/>
-    
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <style>
         * {
             margin: 0;
@@ -132,7 +131,7 @@
             background: #d63654;
         }
     </style>
-<link rel="modulepreload" href="/client-de0178ffa8be95de.js" crossorigin="anonymous" integrity="sha384-In0dyWea3Qark6H1n26JigclZLawhgmisgt+qNX2mSPks619y5xKjwEXRemCMtP6"><link rel="preload" href="/client-de0178ffa8be95de_bg.wasm" crossorigin="anonymous" integrity="sha384-raazE9xYddzwIvAEvGXr2GkS8GNtctC1hTIy9pxeUfqBeCUpnoVLwB+5vwOohqXm" as="fetch" type="application/wasm"></head>
+</head>
 <body>
     <!-- Loading screen -->
     <div id="loading">
@@ -151,25 +150,35 @@
     </div>
 
     <script type="module">
-        // Hide loading screen when WASM is ready
-        window.addEventListener('load', () => {
-            // Bevy will create its own canvas
-            const checkCanvas = setInterval(() => {
-                const canvas = document.querySelector('canvas');
-                if (canvas) {
-                    clearInterval(checkCanvas);
-                    document.getElementById('loading').classList.add('hidden');
-                }
-            }, 100);
+        import init from './client.js';
 
-            // Timeout after 30 seconds
-            setTimeout(() => {
+        // Initialize WASM
+        async function run() {
+            try {
+                document.getElementById('loading-text').textContent = 'Initializing game engine...';
+                await init();
+            } catch (e) {
+                console.error('Failed to initialize:', e);
+                showError('Failed to initialize game: ' + e.message);
+            }
+        }
+
+        // Hide loading screen when canvas appears
+        const checkCanvas = setInterval(() => {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
                 clearInterval(checkCanvas);
-                if (!document.querySelector('canvas')) {
-                    showError('Game failed to load. Please refresh the page.');
-                }
-            }, 30000);
-        });
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }, 100);
+
+        // Timeout after 30 seconds
+        setTimeout(() => {
+            clearInterval(checkCanvas);
+            if (!document.querySelector('canvas')) {
+                showError('Game failed to load. Please refresh the page.');
+            }
+        }, 30000);
 
         // Error handling
         window.addEventListener('error', (event) => {
@@ -187,17 +196,8 @@
             document.getElementById('error-message').textContent = message;
             document.getElementById('error-overlay').classList.add('visible');
         }
+
+        run();
     </script>
-
-<script type="module">
-import init, * as bindings from '/client-de0178ffa8be95de.js';
-const wasm = await init({ module_or_path: '/client-de0178ffa8be95de_bg.wasm' });
-
-
-window.wasmBindings = bindings;
-
-
-dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
-
-</script></body>
+</body>
 </html>

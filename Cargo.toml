@@ -10,8 +10,12 @@ authors = ["Rise RTS Team"]
 
 [workspace.dependencies]
 # Bevy ecosystem - pinned versions
-# Note: default-features not specified here so crates can override
-bevy = "0.17.0"
+# default-features = false so crates can pick only what they need
+bevy = { version = "0.17.0", default-features = false }
+bevy_app = "0.17.0"
+bevy_ecs = "0.17.0"
+bevy_time = "0.17.0"
+bevy_log = "0.17.0"
 bevy_egui = "0.37.0"
 
 # Serialization

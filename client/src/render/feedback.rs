@@ -1,8 +1,10 @@
-//! Visual feedback systems
+//! Visual feedback systems (2D)
 //!
 //! Health bars, gathering indicators, floating resource numbers
 
 use bevy::prelude::*;
+
+use super::TILE_SIZE;
 
 /// Plugin for visual feedback
 pub struct VisualFeedbackPlugin;
@@ -41,8 +43,6 @@ pub struct HealthBarFill {
 /// Spawn health bars for entities with Health component
 fn spawn_health_bars(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     entities_without_bars: Query<
         (Entity, &sim::Health, &sim::SimPosition),
         (With<sim::SimEntity>, Without<HealthBarBackground>),
@@ -57,24 +57,23 @@ fn spawn_health_bars(
             continue;
         }
 
-        let bar_width = 0.8;
-        let bar_height = 0.08;
-        let bar_y_offset = 1.2; // Above the entity
+        let bar_width = TILE_SIZE * 0.8;
+        let bar_height = TILE_SIZE * 0.1;
+        let bar_y_offset = TILE_SIZE * 1.0; // Above the entity
+
+        let world_x = pos.x * TILE_SIZE;
+        let world_y = pos.z * TILE_SIZE + bar_y_offset;
 
         // Background (dark)
-        let bg_entity = commands
-            .spawn((
-                Mesh3d(meshes.add(Cuboid::new(bar_width, bar_height, 0.02))),
-                MeshMaterial3d(materials.add(StandardMaterial {
-                    base_color: Color::srgba(0.1, 0.1, 0.1, 0.8),
-                    unlit: true,
-                    alpha_mode: AlphaMode::Blend,
-                    ..default()
-                })),
-                Transform::from_xyz(pos.x, bar_y_offset, pos.z),
-                HealthBarBackground { parent: entity },
-            ))
-            .id();
+        commands.spawn((
+            Sprite {
+                color: Color::srgba(0.1, 0.1, 0.1, 0.8),
+                custom_size: Some(Vec2::new(bar_width, bar_height)),
+                ..default()
+            },
+            Transform::from_xyz(world_x, world_y, 500.0), // High Z for UI
+            HealthBarBackground { parent: entity },
+        ));
 
         // Fill (green/yellow/red based on health)
         let health_percent = health.current as f32 / health.max as f32;
@@ -82,17 +81,15 @@ fn spawn_health_bars(
         let fill_color = health_color(health_percent);
 
         commands.spawn((
-            Mesh3d(meshes.add(Cuboid::new(fill_width.max(0.01), bar_height * 0.8, 0.03))),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: fill_color,
-                unlit: true,
-                alpha_mode: AlphaMode::Blend,
+            Sprite {
+                color: fill_color,
+                custom_size: Some(Vec2::new(fill_width.max(1.0), bar_height * 0.8)),
                 ..default()
-            })),
+            },
             Transform::from_xyz(
-                pos.x - (bar_width - fill_width) / 2.0,
-                bar_y_offset,
-                pos.z + 0.01,
+                world_x - (bar_width - fill_width) / 2.0,
+                world_y,
+                501.0, // Slightly in front of background
             ),
             HealthBarFill { parent: entity },
         ));
@@ -102,25 +99,18 @@ fn spawn_health_bars(
 /// Update health bar positions and fill
 fn update_health_bars(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     entities: Query<(&sim::SimPosition, &sim::Health)>,
     mut backgrounds: Query<(Entity, &HealthBarBackground, &mut Transform), Without<HealthBarFill>>,
-    mut fills: Query<(
-        Entity,
-        &HealthBarFill,
-        &mut Transform,
-        &MeshMaterial3d<StandardMaterial>,
-    )>,
+    mut fills: Query<(Entity, &HealthBarFill, &mut Transform, &mut Sprite)>,
 ) {
-    let bar_width = 0.8;
-    let bar_height = 0.08;
-    let bar_y_offset = 1.2;
+    let bar_width = TILE_SIZE * 0.8;
+    let bar_y_offset = TILE_SIZE * 1.0;
 
     // Update backgrounds
     for (bg_entity, bg, mut transform) in backgrounds.iter_mut() {
         if let Ok((pos, _)) = entities.get(bg.parent) {
-            transform.translation = Vec3::new(pos.x, bar_y_offset, pos.z);
+            transform.translation.x = pos.x * TILE_SIZE;
+            transform.translation.y = pos.z * TILE_SIZE + bar_y_offset;
         } else {
             // Parent entity gone, despawn bar
             commands.entity(bg_entity).despawn();
@@ -128,17 +118,16 @@ fn update_health_bars(
     }
 
     // Update fills
-    for (fill_entity, fill, mut transform, material_handle) in fills.iter_mut() {
+    for (fill_entity, fill, mut transform, mut sprite) in fills.iter_mut() {
         if let Ok((pos, health)) = entities.get(fill.parent) {
             let health_percent = health.current as f32 / health.max as f32;
             let fill_width = bar_width * health_percent;
 
-            transform.translation = Vec3::new(
-                pos.x - (bar_width - fill_width) / 2.0,
-                bar_y_offset,
-                pos.z + 0.01,
-            );
-            transform.scale.x = health_percent.max(0.01);
+            transform.translation.x = pos.x * TILE_SIZE - (bar_width - fill_width) / 2.0;
+            transform.translation.y = pos.z * TILE_SIZE + bar_y_offset;
+
+            sprite.color = health_color(health_percent);
+            sprite.custom_size = Some(Vec2::new(fill_width.max(1.0), TILE_SIZE * 0.08));
         } else {
             // Parent entity gone, despawn bar
             commands.entity(fill_entity).despawn();
@@ -170,11 +159,9 @@ pub struct GatheringIndicator {
 /// Update gathering indicators (pulsing effect on gathering units)
 fn update_gathering_indicators(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
     gatherers: Query<(Entity, &sim::Gatherer, &sim::SimPosition)>,
-    mut indicators: Query<(Entity, &mut GatheringIndicator, &mut Transform)>,
+    mut indicators: Query<(Entity, &mut GatheringIndicator, &mut Transform, &mut Sprite)>,
 ) {
     // Track which gatherers are actively gathering
     let gathering_entities: Vec<Entity> = gatherers
@@ -184,14 +171,14 @@ fn update_gathering_indicators(
         .collect();
 
     // Remove indicators for non-gathering entities
-    for (ind_entity, indicator, _) in indicators.iter() {
+    for (ind_entity, indicator, _, _) in indicators.iter() {
         if !gathering_entities.contains(&indicator.parent) {
             commands.entity(ind_entity).despawn();
         }
     }
 
     // Get existing indicator parents
-    let existing_parents: Vec<Entity> = indicators.iter().map(|(_, i, _)| i.parent).collect();
+    let existing_parents: Vec<Entity> = indicators.iter().map(|(_, i, _, _)| i.parent).collect();
 
     // Spawn new indicators
     for (entity, gatherer, pos) in gatherers.iter() {
@@ -202,17 +189,17 @@ fn update_gathering_indicators(
             continue;
         }
 
-        // Spawn a small pulsing ring
+        // Spawn a pulsing circle indicator
+        let world_x = pos.x * TILE_SIZE;
+        let world_y = pos.z * TILE_SIZE;
+
         commands.spawn((
-            Mesh3d(meshes.add(Torus::new(0.2, 0.25))),
-            MeshMaterial3d(materials.add(StandardMaterial {
-                base_color: Color::srgba(1.0, 0.8, 0.0, 0.6),
-                unlit: true,
-                alpha_mode: AlphaMode::Blend,
+            Sprite {
+                color: Color::srgba(1.0, 0.8, 0.0, 0.6),
+                custom_size: Some(Vec2::splat(TILE_SIZE * 0.5)),
                 ..default()
-            })),
-            Transform::from_xyz(pos.x, 0.1, pos.z)
-                .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            },
+            Transform::from_xyz(world_x, world_y - TILE_SIZE * 0.3, 50.0),
             GatheringIndicator {
                 parent: entity,
                 pulse_timer: 0.0,
@@ -221,16 +208,19 @@ fn update_gathering_indicators(
     }
 
     // Update existing indicators (pulse effect)
-    for (_, mut indicator, mut transform) in indicators.iter_mut() {
+    for (_, mut indicator, mut transform, mut sprite) in indicators.iter_mut() {
         indicator.pulse_timer += time.delta_secs() * 3.0;
         let pulse = (indicator.pulse_timer.sin() + 1.0) / 2.0; // 0 to 1
         let scale = 0.8 + pulse * 0.4; // 0.8 to 1.2
         transform.scale = Vec3::splat(scale);
 
+        // Pulse alpha too
+        sprite.color = Color::srgba(1.0, 0.8, 0.0, 0.4 + pulse * 0.4);
+
         // Update position to follow parent
         if let Ok((_, _, pos)) = gatherers.get(indicator.parent) {
-            transform.translation.x = pos.x;
-            transform.translation.z = pos.z;
+            transform.translation.x = pos.x * TILE_SIZE;
+            transform.translation.y = pos.z * TILE_SIZE - TILE_SIZE * 0.3;
         }
     }
 }
@@ -256,10 +246,9 @@ pub struct SpawnFloatingTextEvent {
 }
 
 fn spawn_floating_text(// For now, this is a stub - would need text rendering setup
-    // In a full implementation, you'd use bevy's text2d or a billboard text system
+    // In a full implementation, you'd use bevy's text2d
 ) {
-    // TODO: Implement floating text spawning
-    // This requires setting up a font asset and text rendering
+    // TODO: Implement floating text spawning with Text2d
 }
 
 fn update_floating_text(

@@ -1,8 +1,8 @@
-//! Selection visual rendering
+//! Selection visual rendering (2D)
 
 use bevy::prelude::*;
 
-use super::GameMaterials;
+use super::TILE_SIZE;
 use crate::input::SelectionState;
 
 /// Marker for selection ring entity
@@ -14,14 +14,10 @@ pub struct SelectionRing {
 /// Update selection visuals
 pub fn update_selection_visuals(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    materials: Option<Res<GameMaterials>>,
     selection_state: Res<SelectionState>,
     mut existing_rings: Query<(Entity, &SelectionRing, &mut Transform)>,
     positions: Query<&sim::SimPosition>,
 ) {
-    let Some(materials) = materials else { return };
-
     // Track which rings to remove and which parents already have rings
     let mut rings_to_remove = Vec::new();
     let mut existing_parents = Vec::new();
@@ -31,8 +27,9 @@ pub fn update_selection_visuals(
         if !selection_state.selected.contains(&ring.parent) {
             rings_to_remove.push(ring_entity);
         } else if let Ok(pos) = positions.get(ring.parent) {
-            // Update position
-            transform.translation = Vec3::new(pos.x, 0.05, pos.z);
+            // Update position (2D: X stays X, Z becomes Y)
+            transform.translation.x = pos.x * TILE_SIZE;
+            transform.translation.y = pos.z * TILE_SIZE;
             existing_parents.push(ring.parent);
         } else {
             // Parent entity no longer exists
@@ -56,12 +53,17 @@ pub fn update_selection_visuals(
             continue;
         };
 
-        // Spawn selection ring
+        let world_x = pos.x * TILE_SIZE;
+        let world_y = pos.z * TILE_SIZE;
+
+        // Spawn selection ring as a hollow square/circle indicator
         commands.spawn((
-            Mesh3d(meshes.add(Torus::new(0.4, 0.5))),
-            MeshMaterial3d(materials.selection_ring.clone()),
-            Transform::from_translation(Vec3::new(pos.x, 0.05, pos.z))
-                .with_rotation(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2)),
+            Sprite {
+                color: Color::srgba(0.0, 1.0, 0.0, 0.8),
+                custom_size: Some(Vec2::splat(TILE_SIZE * 1.2)),
+                ..default()
+            },
+            Transform::from_xyz(world_x, world_y, 10.0), // Just above ground
             SelectionRing {
                 parent: selected_entity,
             },
