@@ -1,0 +1,76 @@
+// Persian Empire - Cavalry and Wealth focus
+(
+    id: EmpireId("persians"),
+    name: "Persian Empire",
+    description: "Mighty empire stretching from Egypt to India. Persian wealth and cavalry are legendary throughout the ancient world.",
+    theme: "Cavalry, Wealth",
+    leaders: [
+        (
+            id: LeaderId("cyrus"),
+            name: "Cyrus the Great",
+            title: "The Liberator",
+            description: "Founder of the Persian Empire, known for tolerance and military genius. Cavalry is stronger and faster.",
+            military_bonuses: (
+                attack_bonus: {Cavalry: 3},
+                speed_bonus: {Cavalry: 0.15},
+                training_speed: 0.90,
+            ),
+            passive_traits: [
+                MilitaryTrainingSpeed(0.15),
+            ],
+        ),
+        (
+            id: LeaderId("darius"),
+            name: "Darius I",
+            title: "The Administrator",
+            description: "Organized the empire into satrapies. Economy is stronger and tribute flows more freely.",
+            military_bonuses: (
+                defense_bonus: {Cavalry: 2, Infantry: 1},
+            ),
+            passive_traits: [
+                TownCenterBonus(0.20),
+                PopulationCap(5),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "immortal",
+            name: "Immortal",
+            replaces: Some(Soldier),
+            stats: (
+                health: 75,
+                attack: 10,
+                defense: 7,
+                speed: 3.2,
+                range: 1.0,
+                category: Infantry,
+            ),
+            cost: (food: 55, wood: 0, gold: 40, stone: 0),
+            train_time: 28,
+            description: "Elite royal guard that never seems to diminish. Heals faster when out of combat.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "satrap_court",
+            name: "Satrap Court",
+            replaces: None,
+            cost: (food: 0, wood: 150, gold: 150, stone: 100),
+            build_time: 90,
+            description: "Administrative center that generates gold and increases population cap.",
+            effects: [
+                ResourceGeneration(Gold, 0.3),
+                PopulationBonus(8),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Gold: 0.15},
+        starting_resources: (food: 100, wood: 100, gold: 200, stone: 50),
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

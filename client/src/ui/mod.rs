@@ -1,15 +1,21 @@
 //! UI systems using bevy_egui
 
 mod building_panel;
+mod empire_select;
+mod leader_select;
 mod main_menu;
 mod pause_menu;
+mod play_menu;
 mod resources;
 mod selection;
 mod tech_panel;
 
 pub use building_panel::*;
+pub use empire_select::*;
+pub use leader_select::*;
 pub use main_menu::*;
 pub use pause_menu::*;
+pub use play_menu::*;
 pub use resources::*;
 pub use selection::*;
 pub use tech_panel::*;
@@ -29,6 +35,21 @@ impl Plugin for UiPlugin {
             .add_systems(
                 EguiPrimaryContextPass,
                 ui_main_menu.run_if(in_state(GameState::MainMenu)),
+            )
+            // Play menu (choose new game or load)
+            .add_systems(
+                EguiPrimaryContextPass,
+                ui_play_menu.run_if(in_state(GameState::PlayMenu)),
+            )
+            // Empire selection (in GameSetup state)
+            .add_systems(
+                EguiPrimaryContextPass,
+                ui_empire_select.run_if(in_state(GameState::GameSetup)),
+            )
+            // Leader selection (in GameSetup state)
+            .add_systems(
+                EguiPrimaryContextPass,
+                ui_leader_select.run_if(in_state(GameState::GameSetup)),
             )
             // Pause menu (only in Paused state)
             .add_systems(

@@ -1,0 +1,75 @@
+// Egyptian Empire - Wonder and Economy focus
+(
+    id: EmpireId("egyptians"),
+    name: "Egyptian Empire",
+    description: "Ancient civilization of the Nile, renowned for their monumental architecture and mastery of trade. Egyptian wealth flows like the great river itself.",
+    theme: "Wonder, Economy",
+    leaders: [
+        (
+            id: LeaderId("cleopatra"),
+            name: "Cleopatra",
+            title: "The Diplomat",
+            description: "Master of diplomacy and trade. Gold flows more freely and markets are more favorable.",
+            military_bonuses: (
+                defense_bonus: {Infantry: 1},
+            ),
+            passive_traits: [
+                TownCenterBonus(0.15),
+            ],
+        ),
+        (
+            id: LeaderId("ramesses"),
+            name: "Ramesses II",
+            title: "The Builder",
+            description: "Great monument builder. Wonders and buildings are constructed faster and provide greater benefits.",
+            military_bonuses: (
+                defense_bonus: {Infantry: 2, Siege: 1},
+            ),
+            passive_traits: [
+                BuildSpeed(0.25),
+                PopulationCap(5),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "war_elephant",
+            name: "War Elephant",
+            replaces: None,
+            stats: (
+                health: 200,
+                attack: 18,
+                defense: 6,
+                speed: 2.0,
+                range: 1.0,
+                category: Cavalry,
+            ),
+            cost: (food: 100, wood: 0, gold: 80, stone: 0),
+            train_time: 50,
+            description: "Massive war beast that tramples enemy formations. Slow but devastating.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "pyramid",
+            name: "Pyramid",
+            replaces: None,
+            cost: (food: 0, wood: 100, gold: 200, stone: 500),
+            build_time: 180,
+            description: "Eternal monument that generates gold over time and inspires nearby workers.",
+            effects: [
+                ResourceGeneration(Gold, 0.5),
+                PopulationBonus(5),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Gold: 0.20},
+        starting_resources: (food: 100, wood: 100, gold: 150, stone: 50),
+        market_discount: 0.15,
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

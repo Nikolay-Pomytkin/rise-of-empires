@@ -107,12 +107,13 @@ pub fn ui_main_menu(
                         let button_size = egui::vec2(280.0, 45.0);
 
                         if menu_button(ui, "Play Game", button_size).clicked() {
-                            next_state.set(GameState::InGame);
+                            next_state.set(GameState::PlayMenu);
                         }
 
                         ui.add_space(10.0);
 
                         if menu_button(ui, "Quick Battle", button_size).clicked() {
+                            // Quick battle skips setup and goes straight to game
                             next_state.set(GameState::InGame);
                         }
 

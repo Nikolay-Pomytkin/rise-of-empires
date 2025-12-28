@@ -1,0 +1,74 @@
+// Greek Empire - Infantry and Philosophy focus
+(
+    id: EmpireId("greeks"),
+    name: "Greek City-States",
+    description: "Birthplace of democracy and philosophy. Greek hoplites form impenetrable phalanxes, while their scholars advance technology faster than any other civilization.",
+    theme: "Infantry, Philosophy",
+    leaders: [
+        (
+            id: LeaderId("alexander"),
+            name: "Alexander",
+            title: "The Great",
+            description: "Conquered the known world before age 30. His armies are versatile and strike with overwhelming force.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 2, Cavalry: 2},
+                speed_bonus: {Infantry: 0.10, Cavalry: 0.10},
+                training_speed: 0.90,
+            ),
+            passive_traits: [
+                HealingRate(0.25),
+            ],
+        ),
+        (
+            id: LeaderId("pericles"),
+            name: "Pericles",
+            title: "The Statesman",
+            description: "Led Athens during its Golden Age. Under his guidance, research flourishes and the economy thrives.",
+            military_bonuses: (
+                defense_bonus: {Infantry: 3},
+            ),
+            passive_traits: [
+                PopulationCap(5),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "hoplite",
+            name: "Hoplite",
+            replaces: Some(Soldier),
+            stats: (
+                health: 70,
+                attack: 8,
+                defense: 12,
+                speed: 2.5,
+                range: 1.0,
+                category: Infantry,
+            ),
+            cost: (food: 40, wood: 0, gold: 25, stone: 0),
+            train_time: 28,
+            description: "Heavy infantry armed with spear and large shield. Excels in defensive formations.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "academy",
+            name: "Academy",
+            replaces: None,
+            cost: (food: 0, wood: 150, gold: 100, stone: 50),
+            build_time: 60,
+            description: "A center of learning that accelerates all research.",
+            effects: [
+                ResearchSpeedBonus(0.25),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {},
+        starting_resources: (food: 100, wood: 100, gold: 100, stone: 0),
+    ),
+    tech_bonuses: (
+        research_speed: 0.90,
+        age_advance_discount: 0.10,
+    ),
+)

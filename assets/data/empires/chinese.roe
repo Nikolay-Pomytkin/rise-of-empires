@@ -1,0 +1,74 @@
+// Chinese Empire - Tech and Defense focus
+(
+    id: EmpireId("chinese"),
+    name: "Chinese Empire",
+    description: "Ancient civilization with unmatched technological advancement. Chinese inventions and fortifications have shaped history.",
+    theme: "Tech, Defense",
+    leaders: [
+        (
+            id: LeaderId("qin_shi_huang"),
+            name: "Qin Shi Huang",
+            title: "The First Emperor",
+            description: "Unified China and built the Great Wall. Defensive structures are stronger and cheaper.",
+            military_bonuses: (
+                defense_bonus: {Infantry: 3, Ranged: 2},
+            ),
+            passive_traits: [
+                BuildSpeed(0.15),
+                PopulationCap(10),
+            ],
+        ),
+        (
+            id: LeaderId("wu_zetian"),
+            name: "Wu Zetian",
+            title: "The Empress",
+            description: "Only female emperor in Chinese history. Research is faster and spies are more effective.",
+            military_bonuses: (
+                attack_bonus: {Ranged: 2},
+                speed_bonus: {Ranged: 0.05},
+            ),
+            passive_traits: [
+                VisionRange(0.25),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "chu_ko_nu",
+            name: "Chu Ko Nu",
+            replaces: None,
+            stats: (
+                health: 40,
+                attack: 6,
+                defense: 2,
+                speed: 2.8,
+                range: 5.0,
+                category: Ranged,
+            ),
+            cost: (food: 40, wood: 40, gold: 30, stone: 0),
+            train_time: 20,
+            description: "Repeating crossbowman with rapid fire capability. Lower damage per shot but high sustained damage.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "great_wall",
+            name: "Great Wall Segment",
+            replaces: None,
+            cost: (food: 0, wood: 50, gold: 0, stone: 150),
+            build_time: 40,
+            description: "Defensive fortification that slows enemy units and provides vision.",
+            effects: [
+                AttackAura(1),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {},
+        starting_resources: (food: 100, wood: 100, gold: 100, stone: 100),
+    ),
+    tech_bonuses: (
+        research_speed: 0.90,
+        age_advance_discount: 0.10,
+    ),
+)

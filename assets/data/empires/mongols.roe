@@ -1,0 +1,76 @@
+// Mongol Empire - Cavalry and Mobility focus
+(
+    id: EmpireId("mongols"),
+    name: "Mongol Empire",
+    description: "The greatest cavalry force the world has ever seen. Mongol horse archers can strike anywhere, anytime, and vanish before the enemy can respond.",
+    theme: "Cavalry, Mobility",
+    leaders: [
+        (
+            id: LeaderId("genghis_khan"),
+            name: "Genghis Khan",
+            title: "The World Conqueror",
+            description: "United the Mongol tribes and conquered the largest contiguous empire in history. His cavalry are faster and deadlier.",
+            military_bonuses: (
+                attack_bonus: {Cavalry: 3},
+                speed_bonus: {Cavalry: 0.15, Ranged: 0.10},
+                training_speed: 0.85,
+            ),
+            passive_traits: [
+                VisionRange(0.25),
+            ],
+        ),
+        (
+            id: LeaderId("kublai_khan"),
+            name: "Kublai Khan",
+            title: "The Administrator",
+            description: "Grandson of Genghis who ruled China and established the Yuan dynasty. Focuses on economy and trade.",
+            military_bonuses: (
+                defense_bonus: {Cavalry: 2},
+            ),
+            passive_traits: [
+                StartingVillagers(2),
+                TownCenterBonus(0.15),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "mangudai",
+            name: "Mangudai",
+            replaces: None,
+            stats: (
+                health: 45,
+                attack: 8,
+                defense: 2,
+                speed: 5.5,
+                range: 4.0,
+                category: Cavalry,
+            ),
+            cost: (food: 60, wood: 30, gold: 40, stone: 0),
+            train_time: 35,
+            description: "Elite horse archer capable of firing while moving. Excels at hit-and-run tactics.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "ger",
+            name: "Ger",
+            replaces: Some(Barracks),
+            cost: (food: 0, wood: 100, gold: 0, stone: 0),
+            build_time: 30,
+            description: "A mobile military camp that can be packed up and moved. Trains cavalry faster.",
+            effects: [
+                TrainingSpeedBonus(0.20),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Food: 0.05},
+        kill_bonus: {Gold: 5.0},
+        starting_resources: (food: 150, wood: 100, gold: 0, stone: 0),
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

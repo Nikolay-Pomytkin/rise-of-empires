@@ -1,0 +1,99 @@
+// Russian Empire - Infantry and Endurance focus (POWERFUL)
+(
+    id: EmpireId("russians"),
+    name: "Russian Empire",
+    description: "The vast motherland breeds warriors of unmatched endurance and determination. Russian forces grow stronger in adversity, and their winters have broken countless invaders.",
+    theme: "Infantry, Endurance",
+    leaders: [
+        (
+            id: LeaderId("ivan_the_terrible"),
+            name: "Ivan IV",
+            title: "The Terrible",
+            description: "First Tsar of Russia who expanded the empire through ruthless conquest. Military units are stronger and strike fear into enemies.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 4, Siege: 3},
+                defense_bonus: {Infantry: 2},
+                speed_bonus: {Infantry: 0.05},
+                training_speed: 0.80,
+            ),
+            passive_traits: [
+                MilitaryTrainingSpeed(0.20),
+                PopulationCap(10),
+            ],
+        ),
+        (
+            id: LeaderId("peter_the_great"),
+            name: "Peter I",
+            title: "The Great",
+            description: "Modernized Russia and built a powerful navy. All units benefit from advanced training and technology.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 2, Naval: 3, Ranged: 2},
+                defense_bonus: {Infantry: 3, Naval: 2},
+                speed_bonus: {Cavalry: 0.10},
+            ),
+            passive_traits: [
+                BuildSpeed(0.25),
+                VisionRange(0.20),
+                StartingVillagers(2),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "streltsy",
+            name: "Streltsy",
+            replaces: Some(Soldier),
+            stats: (
+                health: 90,
+                attack: 14,
+                defense: 8,
+                speed: 2.8,
+                range: 3.0,
+                category: Infantry,
+            ),
+            cost: (food: 50, wood: 30, gold: 35, stone: 0),
+            train_time: 28,
+            description: "Elite musketeer infantry that can fight in melee or at range. Extremely versatile and durable.",
+        ),
+        (
+            id: "cossack",
+            name: "Cossack",
+            replaces: None,
+            stats: (
+                health: 70,
+                attack: 12,
+                defense: 4,
+                speed: 5.0,
+                range: 1.0,
+                category: Cavalry,
+            ),
+            cost: (food: 70, wood: 0, gold: 45, stone: 0),
+            train_time: 30,
+            description: "Fearsome light cavalry raiders from the steppes. Fast, deadly, and excellent at flanking.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "kremlin",
+            name: "Kremlin",
+            replaces: None,
+            cost: (food: 0, wood: 200, gold: 200, stone: 400),
+            build_time: 150,
+            description: "Mighty fortress that serves as both defensive stronghold and administrative center. Provides massive bonuses.",
+            effects: [
+                PopulationBonus(15),
+                AttackAura(2),
+                HealingAura(0.10),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Wood: 0.15, Food: 0.10, Stone: 0.10},
+        starting_resources: (food: 200, wood: 200, gold: 100, stone: 100),
+        kill_bonus: {Food: 0.10},
+    ),
+    tech_bonuses: (
+        research_speed: 0.95,
+        age_advance_discount: 0.05,
+    ),
+)

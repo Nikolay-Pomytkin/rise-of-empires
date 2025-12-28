@@ -1,0 +1,77 @@
+// Viking Empire - Naval and Raiding focus
+(
+    id: EmpireId("vikings"),
+    name: "Viking Clans",
+    description: "Fierce warriors from the frozen north, masters of the sea and fearsome raiders. Viking longships strike terror into coastal settlements.",
+    theme: "Naval, Raiding",
+    leaders: [
+        (
+            id: LeaderId("ragnar"),
+            name: "Ragnar Lothbrok",
+            title: "The Fearless",
+            description: "Legendary raider whose warriors fight with reckless abandon. Units deal more damage but are more fragile.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 3, Naval: 2},
+                speed_bonus: {Infantry: 0.10},
+                training_speed: 0.85,
+            ),
+            passive_traits: [
+                HealingRate(0.20),
+            ],
+        ),
+        (
+            id: LeaderId("harald"),
+            name: "Harald Hardrada",
+            title: "The Hard Ruler",
+            description: "Tactical genius who conquered across Europe. Units are more disciplined and defensive.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 1},
+                defense_bonus: {Infantry: 3, Naval: 2},
+            ),
+            passive_traits: [
+                VisionRange(0.20),
+                MilitaryTrainingSpeed(0.10),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "berserker",
+            name: "Berserker",
+            replaces: Some(Soldier),
+            stats: (
+                health: 60,
+                attack: 16,
+                defense: 3,
+                speed: 3.5,
+                range: 1.0,
+                category: Infantry,
+            ),
+            cost: (food: 60, wood: 20, gold: 20, stone: 0),
+            train_time: 25,
+            description: "Frenzied warrior who fights with savage fury. High damage but low defense.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "longship_dock",
+            name: "Longship Dock",
+            replaces: None,
+            cost: (food: 0, wood: 250, gold: 50, stone: 0),
+            build_time: 60,
+            description: "Specialized dock that builds ships faster and allows raiding expeditions.",
+            effects: [
+                TrainingSpeedBonus(0.30),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Wood: 0.15},
+        starting_resources: (food: 150, wood: 150, gold: 50, stone: 50),
+        kill_bonus: {Food: 0.10, Gold: 0.05},
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

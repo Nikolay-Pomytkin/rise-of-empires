@@ -1,0 +1,78 @@
+// Aztec Empire - Infantry and Religion focus
+(
+    id: EmpireId("aztecs"),
+    name: "Aztec Empire",
+    description: "Fierce warriors of Mesoamerica whose religious devotion fuels their military might. Aztec sacrifices grant power to their armies.",
+    theme: "Infantry, Religion",
+    leaders: [
+        (
+            id: LeaderId("montezuma"),
+            name: "Montezuma II",
+            title: "The Wrathful",
+            description: "Fierce ruler who expanded the empire through conquest. Military units gain resources from kills.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 4},
+                speed_bonus: {Infantry: 0.05},
+                training_speed: 0.85,
+            ),
+            passive_traits: [
+                HealingRate(0.10),
+            ],
+        ),
+        (
+            id: LeaderId("cuauhtemoc"),
+            name: "Cuauhtémoc",
+            title: "The Defender",
+            description: "Last Aztec emperor who resisted the Spanish. Units fight harder when defending.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 2},
+                defense_bonus: {Infantry: 3},
+            ),
+            passive_traits: [
+                PopulationCap(5),
+                StartingVillagers(1),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "jaguar_warrior",
+            name: "Jaguar Warrior",
+            replaces: Some(Soldier),
+            stats: (
+                health: 65,
+                attack: 14,
+                defense: 4,
+                speed: 3.8,
+                range: 1.0,
+                category: Infantry,
+            ),
+            cost: (food: 70, wood: 0, gold: 25, stone: 0),
+            train_time: 22,
+            description: "Elite warrior clad in jaguar skins. Fast and deadly, gains health from kills.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "sacrificial_temple",
+            name: "Sacrificial Temple",
+            replaces: None,
+            cost: (food: 0, wood: 100, gold: 100, stone: 200),
+            build_time: 100,
+            description: "Sacred temple where sacrifices empower nearby warriors with increased attack.",
+            effects: [
+                AttackAura(3),
+                HealingAura(0.05),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Food: 0.10},
+        starting_resources: (food: 200, wood: 100, gold: 50, stone: 50),
+        kill_bonus: {Food: 0.15},
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

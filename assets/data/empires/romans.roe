@@ -1,0 +1,75 @@
+// Roman Empire - Infantry and Engineering focus
+(
+    id: EmpireId("romans"),
+    name: "Roman Empire",
+    description: "Masters of infantry tactics and engineering. Roman legions are among the most disciplined soldiers in history, and their roads and aqueducts stand as testaments to their engineering prowess.",
+    theme: "Infantry, Engineering",
+    leaders: [
+        (
+            id: LeaderId("julius_caesar"),
+            name: "Julius Caesar",
+            title: "The Conqueror",
+            description: "A brilliant military commander who expanded Rome's borders. His legions strike faster and harder.",
+            military_bonuses: (
+                attack_bonus: {Infantry: 2},
+                speed_bonus: {Infantry: 0.10},
+                training_speed: 0.90,
+            ),
+            passive_traits: [
+                MilitaryTrainingSpeed(0.15),
+            ],
+        ),
+        (
+            id: LeaderId("augustus"),
+            name: "Augustus",
+            title: "The Builder",
+            description: "First Emperor of Rome, known for transforming Rome from brick to marble. Buildings are stronger and cheaper.",
+            military_bonuses: (
+                defense_bonus: {Infantry: 2},
+            ),
+            passive_traits: [
+                BuildSpeed(0.20),
+                PopulationCap(10),
+            ],
+        ),
+    ],
+    unique_units: [
+        (
+            id: "legionary",
+            name: "Legionary",
+            replaces: Some(Soldier),
+            stats: (
+                health: 80,
+                attack: 12,
+                defense: 8,
+                speed: 3.0,
+                range: 1.0,
+                category: Infantry,
+            ),
+            cost: (food: 50, wood: 0, gold: 30, stone: 0),
+            train_time: 30,
+            description: "Elite heavy infantry with superior armor and discipline. Forms the backbone of Roman military might.",
+        ),
+    ],
+    unique_buildings: [
+        (
+            id: "colosseum",
+            name: "Colosseum",
+            replaces: None,
+            cost: (food: 0, wood: 200, gold: 100, stone: 300),
+            build_time: 120,
+            description: "A grand arena that entertains the masses and increases population capacity.",
+            effects: [
+                PopulationBonus(15),
+            ],
+        ),
+    ],
+    resource_bonuses: (
+        gather_rate: {Stone: 0.10},
+        starting_resources: (food: 100, wood: 100, gold: 50, stone: 50),
+    ),
+    tech_bonuses: (
+        research_speed: 1.0,
+        age_advance_discount: 0.0,
+    ),
+)

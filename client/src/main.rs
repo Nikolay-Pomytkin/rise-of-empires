@@ -15,7 +15,7 @@ mod ui;
 
 use bridge::BridgePlugin;
 use camera::CameraPlugin;
-use game_state::{GameState, GameStatePlugin};
+use game_state::{GameSetupData, GameState, GameStatePlugin};
 use input::InputPlugin;
 use render::RenderPlugin;
 use save_load::SaveLoadPlugin;
@@ -50,8 +50,16 @@ fn main() {
             BridgePlugin,
             SaveLoadPlugin,
         ))
+        .add_systems(Startup, load_game_data)
         .add_systems(OnEnter(GameState::InGame), setup_game)
         .run();
+}
+
+/// Load empire data and other game data at startup
+fn load_game_data(mut commands: Commands) {
+    let empire_data = sim::load_empire_data();
+    info!("Loaded {} empires", empire_data.empires.len());
+    commands.insert_resource(empire_data);
 }
 
 /// Initial game setup - spawn starting entities
@@ -59,6 +67,9 @@ fn setup_game(
     mut commands: Commands,
     mut sim_world: ResMut<sim::SimWorld>,
     mut id_gen: ResMut<sim::EntityIdGenerator>,
+    mut player_modifiers: ResMut<sim::PlayerModifiers>,
+    setup_data: Res<GameSetupData>,
+    empire_data: Option<Res<sim::EmpireData>>,
 ) {
     // Clear any existing state
     // TODO: Proper cleanup when returning to main menu
@@ -66,6 +77,21 @@ fn setup_game(
     // Add players
     sim_world.add_player(shared::PlayerId::PLAYER_1);
     sim_world.add_player(shared::PlayerId::PLAYER_2);
+
+    // Apply empire and leader bonuses if selected
+    if let (Some(empire_data), Some(player_setup)) = (empire_data.as_ref(), setup_data.player_setup.as_ref()) {
+        apply_empire_bonuses(
+            shared::PlayerId::PLAYER_1,
+            player_setup,
+            &empire_data,
+            &mut player_modifiers,
+            &mut sim_world,
+        );
+        info!(
+            "Applied bonuses for empire: {:?}, leader: {:?}",
+            player_setup.empire, player_setup.leader
+        );
+    }
 
     // Spawn Player 1's Town Center
     spawn_town_center(
@@ -228,4 +254,73 @@ fn spawn_resource_node(
         .id();
 
     sim_world.register_entity(sim_id, entity);
+}
+
+/// Apply empire and leader bonuses to a player
+fn apply_empire_bonuses(
+    player_id: shared::PlayerId,
+    player_setup: &shared::PlayerSetup,
+    empire_data: &sim::EmpireData,
+    player_modifiers: &mut sim::PlayerModifiers,
+    sim_world: &mut sim::SimWorld,
+) {
+    let Some(empire) = empire_data.get_empire(&player_setup.empire) else {
+        warn!("Empire {:?} not found", player_setup.empire);
+        return;
+    };
+
+    let leader = empire.leaders.iter().find(|l| l.id == player_setup.leader);
+    if leader.is_none() {
+        warn!("Leader {:?} not found in empire {:?}", player_setup.leader, player_setup.empire);
+    }
+
+    let mods = player_modifiers.get_mut(player_id);
+
+    // Apply empire resource bonuses
+    for (resource, bonus) in &empire.resource_bonuses.gather_rate {
+        let bonus_percent = (*bonus * 100.0) as i32;
+        *mods.gather_rate_bonus.entry(*resource).or_insert(0) += bonus_percent;
+    }
+
+    // Apply starting resources
+    if let Some(player) = sim_world.get_player_mut(player_id) {
+        player.resources.add(&empire.resource_bonuses.starting_resources);
+    }
+
+    // Apply leader bonuses if found
+    if let Some(leader) = leader {
+        // Apply military bonuses
+        for (category, bonus) in &leader.military_bonuses.attack_bonus {
+            mods.unit_attack_bonus += bonus;
+        }
+
+        // Apply passive traits
+        for trait_ in &leader.passive_traits {
+            match trait_ {
+                shared::PassiveTrait::PopulationCap(bonus) => {
+                    if let Some(player) = sim_world.get_player_mut(player_id) {
+                        player.population_cap += *bonus as u32;
+                    }
+                }
+                shared::PassiveTrait::StartingVillagers(count) => {
+                    // Will be handled during villager spawning
+                    info!("Player gets {} extra starting villagers", count);
+                }
+                shared::PassiveTrait::BuildSpeed(bonus) => {
+                    mods.build_speed_bonus += (*bonus * 100.0) as i32;
+                }
+                shared::PassiveTrait::MilitaryTrainingSpeed(bonus) => {
+                    mods.production_speed_bonus += (*bonus * 100.0) as i32;
+                }
+                _ => {
+                    // Other traits handled elsewhere or not yet implemented
+                }
+            }
+        }
+    }
+
+    info!(
+        "Applied empire bonuses: gather_rate={:?}, build_speed={}%, production_speed={}%",
+        mods.gather_rate_bonus, mods.build_speed_bonus, mods.production_speed_bonus
+    );
 }
