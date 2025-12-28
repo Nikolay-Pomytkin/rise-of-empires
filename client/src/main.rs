@@ -22,8 +22,16 @@ use save_load::SaveLoadPlugin;
 use ui::UiPlugin;
 
 fn main() {
-    App::new()
-        .add_plugins(
+    // Set up panic hook for WASM (shows errors in browser console)
+    #[cfg(target_arch = "wasm32")]
+    console_error_panic_hook::set_once();
+
+    let mut app = App::new();
+
+    // Platform-specific window and asset configuration
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        app.add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -34,12 +42,31 @@ fn main() {
                     ..default()
                 })
                 .set(AssetPlugin {
-                    // Enable hot reloading
+                    // Enable hot reloading on native
                     watch_for_changes_override: Some(true),
                     ..default()
                 }),
-        )
-        .add_plugins(EguiPlugin::default())
+        );
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    {
+        app.add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Rise RTS".to_string(),
+                        // WASM: fit to canvas, controlled by CSS
+                        fit_canvas_to_parent: true,
+                        prevent_default_event_handling: false,
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        );
+    }
+
+    app.add_plugins(EguiPlugin::default())
         .add_plugins(GameStatePlugin)
         .add_plugins(sim::SimPlugin::default())
         .add_plugins((

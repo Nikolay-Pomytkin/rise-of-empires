@@ -26,6 +26,11 @@ rand_core = "0.9.0"
 # Hashing for determinism validation
 seahash = "4.1.0"
 
+# WASM support
+console_error_panic_hook = "0.1"
+web-sys = { version = "0.3", features = ["Window", "Storage"] }
+js-sys = "0.3"
+wasm-bindgen = "0.2"
 # Internal crates
 shared = { path = "shared" }
 sim = { path = "sim" }
@@ -36,3 +41,9 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
+# WASM-optimized release profile
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1

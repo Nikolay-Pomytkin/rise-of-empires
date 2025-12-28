@@ -11,7 +11,38 @@ shared = { workspace = true }
 sim = { workspace = true }
 serde = { workspace = true }
 ron = { workspace = true }
-bevy = { workspace = true, features = [
+bevy_egui = { workspace = true }
+
+# Bevy with features that work on all platforms
+[dependencies.bevy]
+workspace = true
+features = [
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_picking",
+]
+
+# Native-only dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dirs = "5.0"
+
+# WASM-only dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = { workspace = true }
+web-sys = { workspace = true }
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+
+# Native-specific features for bevy
+[target.'cfg(all(not(target_arch = "wasm32"), target_os = "linux"))'.dependencies.bevy]
+workspace = true
+features = [
     "bevy_asset",
     "bevy_winit",
     "bevy_render",
@@ -25,7 +56,36 @@ bevy = { workspace = true, features = [
     "multi_threaded",
     "x11",
     "wayland",
-] }
-bevy_egui = { workspace = true }
-dirs = "5.0"
+]
 
+[target.'cfg(all(not(target_arch = "wasm32"), target_os = "macos"))'.dependencies.bevy]
+workspace = true
+features = [
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_picking",
+    "file_watcher",
+    "multi_threaded",
+]
+
+[target.'cfg(all(not(target_arch = "wasm32"), target_os = "windows"))'.dependencies.bevy]
+workspace = true
+features = [
+    "bevy_asset",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_picking",
+    "file_watcher",
+    "multi_threaded",
+]

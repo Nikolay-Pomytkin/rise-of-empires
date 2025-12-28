@@ -1,11 +1,16 @@
 //! Save and load game system
 //!
-//! Handles serializing and deserializing game state to/from files.
+//! Handles serializing and deserializing game state.
+//! - Native: File system via `dirs` crate
+//! - WASM: Browser LocalStorage via `web-sys`
 
 use bevy::ecs::message::{Message, MessageReader, MessageWriter};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+
+#[cfg(not(target_arch = "wasm32"))]
 use std::fs;
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
 
 /// Save file metadata and data
@@ -34,10 +39,7 @@ impl SaveFile {
     pub fn new(name: String, tick: u64, snapshot: shared::WorldSnapshot, rng_seed: u64, next_entity_id: u64) -> Self {
         Self {
             version: Self::CURRENT_VERSION,
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0),
+            timestamp: current_timestamp(),
             name,
             tick,
             snapshot,
@@ -47,108 +49,19 @@ impl SaveFile {
     }
 }
 
-/// Resource for managing saves
-#[derive(Resource)]
-pub struct SaveManager {
-    /// Directory where saves are stored
-    pub save_dir: PathBuf,
+/// Get current timestamp (platform-specific)
+#[cfg(not(target_arch = "wasm32"))]
+fn current_timestamp() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
-impl Default for SaveManager {
-    fn default() -> Self {
-        // Use platform-appropriate save directory
-        let save_dir = if let Some(data_dir) = dirs::data_local_dir() {
-            data_dir.join("RiseRTS").join("saves")
-        } else {
-            PathBuf::from("saves")
-        };
-
-        Self { save_dir }
-    }
-}
-
-impl SaveManager {
-    /// Ensure save directory exists
-    pub fn ensure_save_dir(&self) -> std::io::Result<()> {
-        fs::create_dir_all(&self.save_dir)
-    }
-
-    /// Get path for a save file
-    pub fn save_path(&self, name: &str) -> PathBuf {
-        self.save_dir.join(format!("{}.{}", name, SaveFile::EXTENSION))
-    }
-
-    /// List all available saves
-    pub fn list_saves(&self) -> Vec<SaveFileInfo> {
-        let mut saves = Vec::new();
-
-        if let Ok(entries) = fs::read_dir(&self.save_dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.extension().and_then(|e| e.to_str()) == Some(SaveFile::EXTENSION) {
-                    if let Ok(data) = fs::read(&path) {
-                        if let Ok(save) = ron::de::from_bytes::<SaveFile>(&data) {
-                            saves.push(SaveFileInfo {
-                                filename: path.file_stem()
-                                    .and_then(|s| s.to_str())
-                                    .unwrap_or("unknown")
-                                    .to_string(),
-                                name: save.name,
-                                timestamp: save.timestamp,
-                                tick: save.tick,
-                            });
-                        }
-                    }
-                }
-            }
-        }
-
-        // Sort by timestamp, newest first
-        saves.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-        saves
-    }
-
-    /// Save game to file
-    pub fn save_game(&self, save: &SaveFile) -> Result<PathBuf, SaveError> {
-        self.ensure_save_dir().map_err(SaveError::Io)?;
-
-        let filename = sanitize_filename(&save.name);
-        let path = self.save_path(&filename);
-
-        let data = ron::ser::to_string_pretty(save, ron::ser::PrettyConfig::default())
-            .map_err(SaveError::Serialize)?;
-
-        fs::write(&path, data).map_err(SaveError::Io)?;
-
-        info!("Game saved to {:?}", path);
-        Ok(path)
-    }
-
-    /// Load game from file
-    pub fn load_game(&self, filename: &str) -> Result<SaveFile, SaveError> {
-        let path = self.save_path(filename);
-
-        let data = fs::read(&path).map_err(SaveError::Io)?;
-        let save: SaveFile = ron::de::from_bytes(&data).map_err(SaveError::Deserialize)?;
-
-        if save.version > SaveFile::CURRENT_VERSION {
-            return Err(SaveError::VersionMismatch {
-                file_version: save.version,
-                current_version: SaveFile::CURRENT_VERSION,
-            });
-        }
-
-        info!("Game loaded from {:?}", path);
-        Ok(save)
-    }
-
-    /// Delete a save file
-    pub fn delete_save(&self, filename: &str) -> Result<(), SaveError> {
-        let path = self.save_path(filename);
-        fs::remove_file(&path).map_err(SaveError::Io)?;
-        info!("Save deleted: {:?}", path);
-        Ok(())
-    }
+#[cfg(target_arch = "wasm32")]
+fn current_timestamp() -> u64 {
+    // In WASM, use js_sys::Date
+    (js_sys::Date::now() / 1000.0) as u64
 }
 
 /// Brief info about a save file (for listing)
@@ -163,37 +76,311 @@ pub struct SaveFileInfo {
 impl SaveFileInfo {
     /// Format timestamp as human-readable string
     pub fn formatted_time(&self) -> String {
-        use std::time::{Duration, UNIX_EPOCH};
-
-        let datetime = UNIX_EPOCH + Duration::from_secs(self.timestamp);
-        // Simple formatting - in production you'd use chrono
-        format!("{:?}", datetime)
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use std::time::{Duration, UNIX_EPOCH};
+            let datetime = UNIX_EPOCH + Duration::from_secs(self.timestamp);
+            format!("{:?}", datetime)
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let date = js_sys::Date::new(&wasm_bindgen::JsValue::from_f64(self.timestamp as f64 * 1000.0));
+            date.to_locale_string("en-US", &js_sys::Object::new()).as_string().unwrap_or_default()
+        }
     }
 }
 
 /// Errors that can occur during save/load
 #[derive(Debug)]
 pub enum SaveError {
+    #[cfg(not(target_arch = "wasm32"))]
     Io(std::io::Error),
     Serialize(ron::Error),
     Deserialize(ron::error::SpannedError),
     VersionMismatch { file_version: u32, current_version: u32 },
+    #[cfg(target_arch = "wasm32")]
+    StorageUnavailable,
+    #[cfg(target_arch = "wasm32")]
+    StorageError(String),
 }
 
 impl std::fmt::Display for SaveError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            #[cfg(not(target_arch = "wasm32"))]
             SaveError::Io(e) => write!(f, "IO error: {}", e),
             SaveError::Serialize(e) => write!(f, "Serialization error: {}", e),
             SaveError::Deserialize(e) => write!(f, "Deserialization error: {}", e),
             SaveError::VersionMismatch { file_version, current_version } => {
                 write!(f, "Save version {} is newer than game version {}", file_version, current_version)
             }
+            #[cfg(target_arch = "wasm32")]
+            SaveError::StorageUnavailable => write!(f, "LocalStorage is not available"),
+            #[cfg(target_arch = "wasm32")]
+            SaveError::StorageError(e) => write!(f, "Storage error: {}", e),
         }
     }
 }
 
-/// Sanitize a string for use as a filename
+// ============================================================================
+// Native (Desktop) Implementation
+// ============================================================================
+
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use super::*;
+
+    /// Resource for managing saves (native file system)
+    #[derive(Resource)]
+    pub struct SaveManager {
+        /// Directory where saves are stored
+        pub save_dir: PathBuf,
+    }
+
+    impl Default for SaveManager {
+        fn default() -> Self {
+            // Use platform-appropriate save directory
+            let save_dir = if let Some(data_dir) = dirs::data_local_dir() {
+                data_dir.join("RiseRTS").join("saves")
+            } else {
+                PathBuf::from("saves")
+            };
+
+            Self { save_dir }
+        }
+    }
+
+    impl SaveManager {
+        /// Ensure save directory exists
+        pub fn ensure_save_dir(&self) -> std::io::Result<()> {
+            fs::create_dir_all(&self.save_dir)
+        }
+
+        /// Get path for a save file
+        pub fn save_path(&self, name: &str) -> PathBuf {
+            self.save_dir.join(format!("{}.{}", name, SaveFile::EXTENSION))
+        }
+
+        /// List all available saves
+        pub fn list_saves(&self) -> Vec<SaveFileInfo> {
+            let mut saves = Vec::new();
+
+            if let Ok(entries) = fs::read_dir(&self.save_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|e| e.to_str()) == Some(SaveFile::EXTENSION) {
+                        if let Ok(data) = fs::read(&path) {
+                            if let Ok(save) = ron::de::from_bytes::<SaveFile>(&data) {
+                                saves.push(SaveFileInfo {
+                                    filename: path.file_stem()
+                                        .and_then(|s| s.to_str())
+                                        .unwrap_or("unknown")
+                                        .to_string(),
+                                    name: save.name,
+                                    timestamp: save.timestamp,
+                                    tick: save.tick,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Sort by timestamp, newest first
+            saves.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+            saves
+        }
+
+        /// Save game to file
+        pub fn save_game(&self, save: &SaveFile) -> Result<PathBuf, SaveError> {
+            self.ensure_save_dir().map_err(SaveError::Io)?;
+
+            let filename = sanitize_filename(&save.name);
+            let path = self.save_path(&filename);
+
+            let data = ron::ser::to_string_pretty(save, ron::ser::PrettyConfig::default())
+                .map_err(SaveError::Serialize)?;
+
+            fs::write(&path, data).map_err(SaveError::Io)?;
+
+            info!("Game saved to {:?}", path);
+            Ok(path)
+        }
+
+        /// Load game from file
+        pub fn load_game(&self, filename: &str) -> Result<SaveFile, SaveError> {
+            let path = self.save_path(filename);
+
+            let data = fs::read(&path).map_err(SaveError::Io)?;
+            let save: SaveFile = ron::de::from_bytes(&data).map_err(SaveError::Deserialize)?;
+
+            if save.version > SaveFile::CURRENT_VERSION {
+                return Err(SaveError::VersionMismatch {
+                    file_version: save.version,
+                    current_version: SaveFile::CURRENT_VERSION,
+                });
+            }
+
+            info!("Game loaded from {:?}", path);
+            Ok(save)
+        }
+
+        /// Delete a save file
+        pub fn delete_save(&self, filename: &str) -> Result<(), SaveError> {
+            let path = self.save_path(filename);
+            fs::remove_file(&path).map_err(SaveError::Io)?;
+            info!("Save deleted: {:?}", path);
+            Ok(())
+        }
+    }
+}
+
+// ============================================================================
+// WASM (Browser) Implementation
+// ============================================================================
+
+#[cfg(target_arch = "wasm32")]
+mod wasm {
+    use super::*;
+    use wasm_bindgen::JsCast;
+
+    const SAVE_KEY_PREFIX: &str = "rise_rts_save_";
+    const SAVE_INDEX_KEY: &str = "rise_rts_save_index";
+
+    /// Resource for managing saves (browser LocalStorage)
+    #[derive(Resource, Default)]
+    pub struct SaveManager;
+
+    impl SaveManager {
+        fn get_storage() -> Result<web_sys::Storage, SaveError> {
+            web_sys::window()
+                .and_then(|w| w.local_storage().ok().flatten())
+                .ok_or(SaveError::StorageUnavailable)
+        }
+
+        fn save_key(filename: &str) -> String {
+            format!("{}{}", SAVE_KEY_PREFIX, filename)
+        }
+
+        /// List all available saves
+        pub fn list_saves(&self) -> Vec<SaveFileInfo> {
+            let mut saves = Vec::new();
+
+            let Ok(storage) = Self::get_storage() else {
+                return saves;
+            };
+
+            // Read the save index
+            if let Ok(Some(index_data)) = storage.get_item(SAVE_INDEX_KEY) {
+                if let Ok(filenames) = ron::from_str::<Vec<String>>(&index_data) {
+                    for filename in filenames {
+                        if let Ok(Some(save_data)) = storage.get_item(&Self::save_key(&filename)) {
+                            if let Ok(save) = ron::from_str::<SaveFile>(&save_data) {
+                                saves.push(SaveFileInfo {
+                                    filename,
+                                    name: save.name,
+                                    timestamp: save.timestamp,
+                                    tick: save.tick,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Sort by timestamp, newest first
+            saves.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+            saves
+        }
+
+        /// Save game to LocalStorage
+        pub fn save_game(&self, save: &SaveFile) -> Result<String, SaveError> {
+            let storage = Self::get_storage()?;
+
+            let filename = sanitize_filename(&save.name);
+            let key = Self::save_key(&filename);
+
+            let data = ron::ser::to_string_pretty(save, ron::ser::PrettyConfig::default())
+                .map_err(SaveError::Serialize)?;
+
+            storage.set_item(&key, &data)
+                .map_err(|e| SaveError::StorageError(format!("{:?}", e)))?;
+
+            // Update save index
+            let mut filenames = self.get_save_index();
+            if !filenames.contains(&filename) {
+                filenames.push(filename.clone());
+                if let Ok(index_data) = ron::to_string(&filenames) {
+                    let _ = storage.set_item(SAVE_INDEX_KEY, &index_data);
+                }
+            }
+
+            info!("Game saved to LocalStorage: {}", filename);
+            Ok(filename)
+        }
+
+        /// Load game from LocalStorage
+        pub fn load_game(&self, filename: &str) -> Result<SaveFile, SaveError> {
+            let storage = Self::get_storage()?;
+            let key = Self::save_key(filename);
+
+            let data = storage.get_item(&key)
+                .map_err(|e| SaveError::StorageError(format!("{:?}", e)))?
+                .ok_or_else(|| SaveError::StorageError("Save not found".to_string()))?;
+
+            let save: SaveFile = ron::from_str(&data).map_err(SaveError::Deserialize)?;
+
+            if save.version > SaveFile::CURRENT_VERSION {
+                return Err(SaveError::VersionMismatch {
+                    file_version: save.version,
+                    current_version: SaveFile::CURRENT_VERSION,
+                });
+            }
+
+            info!("Game loaded from LocalStorage: {}", filename);
+            Ok(save)
+        }
+
+        /// Delete a save from LocalStorage
+        pub fn delete_save(&self, filename: &str) -> Result<(), SaveError> {
+            let storage = Self::get_storage()?;
+            let key = Self::save_key(filename);
+
+            storage.remove_item(&key)
+                .map_err(|e| SaveError::StorageError(format!("{:?}", e)))?;
+
+            // Update save index
+            let mut filenames = self.get_save_index();
+            filenames.retain(|f| f != filename);
+            if let Ok(index_data) = ron::to_string(&filenames) {
+                let _ = storage.set_item(SAVE_INDEX_KEY, &index_data);
+            }
+
+            info!("Save deleted from LocalStorage: {}", filename);
+            Ok(())
+        }
+
+        fn get_save_index(&self) -> Vec<String> {
+            let Ok(storage) = Self::get_storage() else {
+                return Vec::new();
+            };
+
+            storage.get_item(SAVE_INDEX_KEY)
+                .ok()
+                .flatten()
+                .and_then(|data| ron::from_str(&data).ok())
+                .unwrap_or_default()
+        }
+    }
+}
+
+// Re-export the appropriate SaveManager based on platform
+#[cfg(not(target_arch = "wasm32"))]
+pub use native::SaveManager;
+#[cfg(target_arch = "wasm32")]
+pub use wasm::SaveManager;
+
+/// Sanitize a string for use as a filename/key
 fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| {
@@ -224,7 +411,10 @@ pub struct LoadGameEvent {
 #[derive(Message, Clone)]
 pub struct SaveCompleteEvent {
     pub success: bool,
+    #[cfg(not(target_arch = "wasm32"))]
     pub path: Option<PathBuf>,
+    #[cfg(target_arch = "wasm32")]
+    pub path: Option<String>,
     pub error: Option<String>,
 }
 
@@ -371,7 +561,7 @@ fn handle_save_events(
             id_gen.current_id(),
         );
 
-        // Write to disk
+        // Write to storage
         match save_manager.save_game(&save) {
             Ok(path) => {
                 complete_events.write(SaveCompleteEvent {

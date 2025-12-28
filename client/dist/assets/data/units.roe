@@ -1,0 +1,47 @@
+// Unit Definitions for Rise RTS
+// This file defines all unit types using RON format
+
+UnitDefs(
+    units: [
+        (
+            id: "villager",
+            name: "Villager",
+            unit_type: Villager,
+            cost: (food: 50, wood: 0, gold: 0, stone: 0),
+            train_time_ticks: 50,
+            hp: 25,
+            speed: 2.0,
+            attack: 3,
+            attack_range: 0.5,
+            armor: 0,
+            population: 1,
+        ),
+        (
+            id: "militia",
+            name: "Militia",
+            unit_type: Soldier,
+            cost: (food: 60, wood: 0, gold: 20, stone: 0),
+            train_time_ticks: 42,
+            hp: 40,
+            speed: 2.0,
+            attack: 4,
+            attack_range: 0.5,
+            armor: 0,
+            population: 1,
+        ),
+        (
+            id: "man_at_arms",
+            name: "Man-at-Arms",
+            unit_type: Soldier,
+            cost: (food: 60, wood: 0, gold: 20, stone: 0),
+            train_time_ticks: 42,
+            hp: 45,
+            speed: 2.0,
+            attack: 6,
+            attack_range: 0.5,
+            armor: 1,
+            population: 1,
+        ),
+    ],
+)
+

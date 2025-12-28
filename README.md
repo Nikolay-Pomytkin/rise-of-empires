@@ -7,7 +7,7 @@ A real-time strategy game built with Rust and Bevy 0.17.
 - **Deterministic Simulation**: Fixed-tick simulation with seeded RNG for replay and lockstep multiplayer support
 - **Economy System**: Resource gathering (food, wood, gold, stone), villagers, and production queues
 - **Tech Tree**: Data-driven technology system with ages and upgrades
-- **Cross-Platform**: Runs on Windows, macOS, and Linux
+- **Cross-Platform**: Runs on Windows, macOS, Linux, and **Web (WASM)**
 
 ## Project Structure
 
@@ -17,7 +17,7 @@ rise/
 ├── sim/        # Deterministic simulation core
 ├── client/     # Bevy client (rendering, input, UI)
 ├── tools/      # Headless sim runner, replay tools
-└── assets/     # Game data files (RON format)
+└── assets/     # Game data files (ROE format)
 ```
 
 ## Quick Start
@@ -26,11 +26,29 @@ rise/
 
 - Rust 1.75+ (install via [rustup](https://rustup.rs/))
 - For Linux: `sudo apt-get install libasound2-dev libudev-dev libxkbcommon-dev`
+- For WASM: `rustup target add wasm32-unknown-unknown && cargo install trunk`
 
-### Running the Client
+### Running the Client (Native)
 
 ```bash
 cargo run -p client
+```
+
+### Running the Client (Web/WASM)
+
+```bash
+cd client
+trunk serve
+```
+
+Then open http://localhost:8080 in your browser.
+
+### Building for Web (Release)
+
+```bash
+cd client
+trunk build --release
+# Built files are in client/dist/
 ```
 
 ### Controls
@@ -136,12 +154,32 @@ Hot reloading is enabled - changes to these files are picked up automatically.
 
 See [docs/packaging.md](docs/packaging.md) for platform-specific build instructions.
 
+### Native
+
 ```bash
 # Release build
 cargo build --release -p client
 
 # The binary will be at target/release/client
 ```
+
+### Web (WASM)
+
+```bash
+cd client
+trunk build --release
+
+# Built files are in client/dist/
+# Deploy the dist/ folder to any static hosting (Cloudflare Pages, Netlify, etc.)
+```
+
+### Cloudflare Pages Deployment
+
+The CI workflow automatically deploys to Cloudflare Pages on pushes to main/master.
+
+Required GitHub secrets:
+- `CLOUDFLARE_API_TOKEN`: API token with Pages edit permissions
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare account ID
 
 ## License
 

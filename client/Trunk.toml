@@ -1,0 +1,27 @@
+# Trunk build configuration for Rise RTS WASM build
+# https://trunkrs.dev/configuration/
+
+[build]
+# Output directory for built files
+dist = "dist"
+# Build in release mode by default for WASM
+release = true
+
+[watch]
+# Watch these paths for changes during development
+watch = ["src", "assets", "index.html"]
+# Ignore build artifacts
+ignore = ["dist", "target"]
+
+[serve]
+# Development server settings
+address = "127.0.0.1"
+port = 8080
+# Open browser automatically
+open = true
+
+[[hooks]]
+# Pre-build hook: ensure assets are available
+stage = "pre_build"
+command = "sh"
+command_arguments = ["-c", "mkdir -p assets 2>/dev/null || true"]

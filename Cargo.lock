@@ -1809,11 +1809,15 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_egui",
+ "console_error_panic_hook",
  "dirs",
+ "js-sys",
  "ron 0.8.1",
  "serde",
  "shared",
  "sim",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

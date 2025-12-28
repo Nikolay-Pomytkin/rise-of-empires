@@ -1,0 +1,98 @@
+// Tech Tree Definition for Rise RTS
+// This file defines ages and technologies using RON format
+
+TechTree(
+    ages: [
+        (
+            id: "dark_age",
+            name: "Dark Age",
+            order: 1,
+            cost: (food: 0, wood: 0, gold: 0, stone: 0),
+            advance_time_ticks: 0,
+            requires: None,
+        ),
+        (
+            id: "feudal_age",
+            name: "Feudal Age",
+            order: 2,
+            cost: (food: 500, wood: 0, gold: 0, stone: 0),
+            advance_time_ticks: 260,
+            requires: Some("dark_age"),
+        ),
+        (
+            id: "castle_age",
+            name: "Castle Age",
+            order: 3,
+            cost: (food: 800, wood: 200, gold: 0, stone: 0),
+            advance_time_ticks: 320,
+            requires: Some("feudal_age"),
+        ),
+    ],
+    techs: [
+        (
+            id: "loom",
+            name: "Loom",
+            description: "Villagers gain +15 HP and +1 armor",
+            cost: (food: 0, wood: 0, gold: 50, stone: 0),
+            research_time_ticks: 50,
+            effects: [
+                UnitHpBonus(percent: 15),
+            ],
+            requires: [],
+            required_age: None,
+        ),
+        (
+            id: "wheelbarrow",
+            name: "Wheelbarrow",
+            description: "Villagers work 10% faster and carry +3 resources",
+            cost: (food: 175, wood: 50, gold: 0, stone: 0),
+            research_time_ticks: 150,
+            effects: [
+                GatherRateBonus(resource: Food, percent: 10),
+                GatherRateBonus(resource: Wood, percent: 10),
+                GatherRateBonus(resource: Gold, percent: 10),
+                GatherRateBonus(resource: Stone, percent: 10),
+                CarryCapacityBonus(amount: 3),
+            ],
+            requires: [],
+            required_age: Some("feudal_age"),
+        ),
+        (
+            id: "double_bit_axe",
+            name: "Double-Bit Axe",
+            description: "Villagers chop wood 20% faster",
+            cost: (food: 100, wood: 50, gold: 0, stone: 0),
+            research_time_ticks: 50,
+            effects: [
+                GatherRateBonus(resource: Wood, percent: 20),
+            ],
+            requires: [],
+            required_age: Some("feudal_age"),
+        ),
+        (
+            id: "horse_collar",
+            name: "Horse Collar",
+            description: "Farms produce 75 more food",
+            cost: (food: 75, wood: 75, gold: 0, stone: 0),
+            research_time_ticks: 40,
+            effects: [
+                GatherRateBonus(resource: Food, percent: 15),
+            ],
+            requires: [],
+            required_age: Some("feudal_age"),
+        ),
+        (
+            id: "gold_mining",
+            name: "Gold Mining",
+            description: "Villagers mine gold 15% faster",
+            cost: (food: 100, wood: 75, gold: 0, stone: 0),
+            research_time_ticks: 60,
+            effects: [
+                GatherRateBonus(resource: Gold, percent: 15),
+            ],
+            requires: [],
+            required_age: Some("feudal_age"),
+        ),
+    ],
+)
+
