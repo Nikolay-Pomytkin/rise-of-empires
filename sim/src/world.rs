@@ -15,6 +15,16 @@ impl EntityIdGenerator {
         self.next_id += 1;
         EntityId::new(self.next_id)
     }
+
+    /// Get the current ID counter (for saving)
+    pub fn current_id(&self) -> u64 {
+        self.next_id
+    }
+
+    /// Set the ID counter (for loading)
+    pub fn set_id(&mut self, id: u64) {
+        self.next_id = id;
+    }
 }
 
 /// Player state in the simulation

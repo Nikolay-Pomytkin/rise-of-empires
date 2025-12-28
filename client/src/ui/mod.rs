@@ -24,6 +24,7 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TechPanelState>()
+            .init_resource::<PauseMenuState>()
             // Main menu (only in MainMenu state)
             .add_systems(
                 EguiPrimaryContextPass,

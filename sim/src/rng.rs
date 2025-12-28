@@ -54,6 +54,17 @@ impl SimRng {
         self.seed
     }
 
+    /// Get the current seed (for saving game state)
+    pub fn current_seed(&self) -> u64 {
+        self.seed
+    }
+
+    /// Set a new seed and reinitialize the RNG
+    pub fn set_seed(&mut self, seed: u64) {
+        self.seed = seed;
+        self.reset();
+    }
+
     /// Generate a random f32 in [0, 1)
     pub fn random(&mut self) -> f32 {
         self.rng.random()

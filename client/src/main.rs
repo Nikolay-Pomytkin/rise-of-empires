@@ -10,6 +10,7 @@ mod camera;
 mod game_state;
 mod input;
 mod render;
+mod save_load;
 mod ui;
 
 use bridge::BridgePlugin;
@@ -17,6 +18,7 @@ use camera::CameraPlugin;
 use game_state::{GameState, GameStatePlugin};
 use input::InputPlugin;
 use render::RenderPlugin;
+use save_load::SaveLoadPlugin;
 use ui::UiPlugin;
 
 fn main() {
@@ -46,6 +48,7 @@ fn main() {
             RenderPlugin,
             UiPlugin,
             BridgePlugin,
+            SaveLoadPlugin,
         ))
         .add_systems(OnEnter(GameState::InGame), setup_game)
         .run();

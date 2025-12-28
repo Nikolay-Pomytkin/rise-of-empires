@@ -27,4 +27,5 @@ bevy = { workspace = true, features = [
     "wayland",
 ] }
 bevy_egui = { workspace = true }
+dirs = "5.0"
 
