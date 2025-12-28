@@ -22,52 +22,26 @@ const HIGHLIGHT_COLOR: egui::Color32 = egui::Color32::from_rgb(180, 150, 80);
 
 pub fn ui_empire_select(
     mut contexts: EguiContexts,
-    empire_data: Option<Res<EmpireData>>,
+    empire_data: Res<EmpireData>,
     mut setup_data: ResMut<GameSetupData>,
     mut next_setup_state: ResMut<NextState<SetupState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
     current_setup_state: Option<Res<State<SetupState>>>,
 ) {
-    // Check if we're in EmpireSelect sub-state (or if sub-state isn't available yet)
-    let should_show = match current_setup_state.as_ref() {
-        Some(state) => **state == SetupState::EmpireSelect,
-        None => true, // Show by default if sub-state not yet initialized
-    };
-    
-    if !should_show {
-        return;
+    // Only show when in EmpireSelect sub-state
+    // If sub-state isn't available yet (first frame), show the UI anyway
+    if let Some(state) = &current_setup_state {
+        if *state.get() != SetupState::EmpireSelect {
+            return;
+        }
     }
+    // If current_setup_state is None, we're in the first frame after state transition
+    // In that case, show the empire select UI since EmpireSelect is the default
     
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
     let screen_rect = ctx.screen_rect();
-    
-    // Full screen dark background
-    egui::Area::new(egui::Id::new("empire_select_bg"))
-        .fixed_pos(egui::pos2(0.0, 0.0))
-        .show(ctx, |ui| {
-            ui.painter().rect_filled(
-                screen_rect,
-                0.0,
-                egui::Color32::from_rgb(12, 12, 18),
-            );
-        });
-
-    // Handle missing empire data gracefully
-    let Some(empire_data) = empire_data else {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(200.0);
-                ui.label(
-                    egui::RichText::new("Loading empire data...")
-                        .size(24.0)
-                        .color(TITLE_COLOR),
-                );
-            });
-        });
-        return;
-    };
 
     // Full screen dark background
     egui::Area::new(egui::Id::new("empire_select_bg"))
@@ -80,13 +54,17 @@ pub fn ui_empire_select(
             );
         });
 
-    // Main content area
-    egui::CentralPanel::default()
-        .frame(egui::Frame::none().fill(egui::Color32::TRANSPARENT))
+    // Main content area - use Window instead of CentralPanel for better visibility
+    egui::Window::new("Choose Your Empire")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .min_width(screen_rect.width() * 0.9)
+        .min_height(screen_rect.height() * 0.8)
+        .title_bar(false)
+        .frame(egui::Frame::none().fill(PANEL_BG).rounding(12.0).inner_margin(30.0))
         .show(ctx, |ui| {
             ui.vertical_centered(|ui| {
-                ui.add_space(40.0);
-
                 // Title
                 ui.label(
                     egui::RichText::new("Choose Your Empire")

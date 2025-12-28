@@ -26,16 +26,14 @@ pub fn ui_leader_select(
     mut next_game_state: ResMut<NextState<GameState>>,
     mut next_setup_state: ResMut<NextState<SetupState>>,
     mut setup_data: ResMut<GameSetupData>,
-    empire_data: Option<Res<EmpireData>>,
+    empire_data: Res<EmpireData>,
     current_setup_state: Option<Res<State<SetupState>>>,
 ) {
     // Only show when in LeaderSelect state
-    if let Some(ref state) = current_setup_state {
-        if **state != SetupState::LeaderSelect {
-            return;
-        }
-    } else {
-        return;
+    // If sub-state isn't available, don't show (wait for empire select first)
+    match &current_setup_state {
+        Some(state) if *state.get() == SetupState::LeaderSelect => {}
+        _ => return,
     }
     
     let Ok(ctx) = contexts.ctx_mut() else {
@@ -46,7 +44,7 @@ pub fn ui_leader_select(
     // Get selected empire
     let selected_empire_id = setup_data.selected_empire.clone();
     let empire = selected_empire_id.as_ref().and_then(|id| {
-        empire_data.as_ref().and_then(|data| data.get_empire(id))
+        empire_data.get_empire(id)
     });
 
     // Full screen dark background
