@@ -13,19 +13,20 @@ serde = { workspace = true }
 ron = { workspace = true }
 bevy_egui = { workspace = true }
 
-# Bevy with features that work on all platforms
+# Bevy with minimal features for WASM (no PBR to reduce size)
 [dependencies.bevy]
 workspace = true
+default-features = false
 features = [
     "bevy_asset",
     "bevy_winit",
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_sprite",
-    "bevy_pbr",
     "bevy_text",
     "bevy_ui",
     "bevy_picking",
+    "webgl2",
 ]
 
 # Native-only dependencies
@@ -39,9 +40,10 @@ web-sys = { workspace = true }
 js-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 
-# Native-specific features for bevy
-[target.'cfg(all(not(target_arch = "wasm32"), target_os = "linux"))'.dependencies.bevy]
+# Native: add back PBR and other features
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
 workspace = true
+default-features = false
 features = [
     "bevy_asset",
     "bevy_winit",
@@ -56,36 +58,4 @@ features = [
     "multi_threaded",
     "x11",
     "wayland",
-]
-
-[target.'cfg(all(not(target_arch = "wasm32"), target_os = "macos"))'.dependencies.bevy]
-workspace = true
-features = [
-    "bevy_asset",
-    "bevy_winit",
-    "bevy_render",
-    "bevy_core_pipeline",
-    "bevy_sprite",
-    "bevy_pbr",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_picking",
-    "file_watcher",
-    "multi_threaded",
-]
-
-[target.'cfg(all(not(target_arch = "wasm32"), target_os = "windows"))'.dependencies.bevy]
-workspace = true
-features = [
-    "bevy_asset",
-    "bevy_winit",
-    "bevy_render",
-    "bevy_core_pipeline",
-    "bevy_sprite",
-    "bevy_pbr",
-    "bevy_text",
-    "bevy_ui",
-    "bevy_picking",
-    "file_watcher",
-    "multi_threaded",
 ]
