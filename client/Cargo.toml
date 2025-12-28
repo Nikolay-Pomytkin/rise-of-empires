@@ -23,10 +23,12 @@ features = [
     "bevy_render",
     "bevy_core_pipeline",
     "bevy_sprite",
+    "bevy_text",
     "bevy_state",
     "bevy_log",
     "webgl2",
     "png",
+    "default_font",
 ]
 
 # Native-only dependencies

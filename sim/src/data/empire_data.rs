@@ -4,8 +4,6 @@
 
 use bevy_ecs::prelude::*;
 use std::collections::HashMap;
-use std::fs;
-use std::path::Path;
 
 use shared::{EmpireDef, EmpireId, LeaderId, LeaderDef};
 
@@ -16,47 +14,6 @@ pub struct EmpireData {
 }
 
 impl EmpireData {
-    /// Load all empire definitions from a directory
-    pub fn load_from_directory(dir_path: &Path) -> Result<Self, String> {
-        let mut empires = HashMap::new();
-
-        if !dir_path.exists() {
-            return Err(format!("Empire data directory not found: {:?}", dir_path));
-        }
-
-        let entries = fs::read_dir(dir_path)
-            .map_err(|e| format!("Failed to read empire directory: {}", e))?;
-
-        for entry in entries {
-            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
-            let path = entry.path();
-
-            if path.extension().map(|e| e == "roe").unwrap_or(false) {
-                match Self::load_empire_file(&path) {
-                    Ok(empire) => {
-                        bevy_log::info!("Loaded empire: {} ({})", empire.name, empire.id);
-                        empires.insert(empire.id.clone(), empire);
-                    }
-                    Err(e) => {
-                        bevy_log::warn!("Failed to load empire from {:?}: {}", path, e);
-                    }
-                }
-            }
-        }
-
-        bevy_log::info!("Loaded {} empires", empires.len());
-        Ok(Self { empires })
-    }
-
-    /// Load a single empire definition file
-    fn load_empire_file(path: &Path) -> Result<EmpireDef, String> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| format!("Failed to read file: {}", e))?;
-
-        ron::from_str(&content)
-            .map_err(|e| format!("Failed to parse RON: {}", e))
-    }
-
     /// Get an empire by ID
     pub fn get_empire(&self, id: &EmpireId) -> Option<&EmpireDef> {
         self.empires.get(id)
@@ -90,29 +47,37 @@ impl EmpireData {
     }
 }
 
-/// Load empire data from the default location
-pub fn load_empire_data() -> EmpireData {
-    // Try multiple possible paths
-    let possible_paths = [
-        "assets/data/empires",
-        "../assets/data/empires",
-        "../../assets/data/empires",
-    ];
+// Embed empire data at compile time for WASM compatibility
+const EMPIRE_DATA: &[(&str, &str)] = &[
+    ("aztecs", include_str!("../../../assets/data/empires/aztecs.roe")),
+    ("chinese", include_str!("../../../assets/data/empires/chinese.roe")),
+    ("egyptians", include_str!("../../../assets/data/empires/egyptians.roe")),
+    ("greeks", include_str!("../../../assets/data/empires/greeks.roe")),
+    ("mongols", include_str!("../../../assets/data/empires/mongols.roe")),
+    ("persians", include_str!("../../../assets/data/empires/persians.roe")),
+    ("romans", include_str!("../../../assets/data/empires/romans.roe")),
+    ("russians", include_str!("../../../assets/data/empires/russians.roe")),
+    ("vikings", include_str!("../../../assets/data/empires/vikings.roe")),
+];
 
-    for path_str in &possible_paths {
-        let path = Path::new(path_str);
-        if path.exists() {
-            match EmpireData::load_from_directory(path) {
-                Ok(data) => return data,
-                Err(e) => {
-                    bevy_log::warn!("Failed to load empires from {:?}: {}", path, e);
-                }
+/// Load empire data from embedded strings (works in WASM)
+pub fn load_empire_data() -> EmpireData {
+    let mut empires = HashMap::new();
+
+    for (name, content) in EMPIRE_DATA {
+        match ron::from_str::<EmpireDef>(content) {
+            Ok(empire) => {
+                bevy_log::info!("Loaded empire: {} ({})", empire.name, empire.id);
+                empires.insert(empire.id.clone(), empire);
+            }
+            Err(e) => {
+                bevy_log::warn!("Failed to parse empire {}: {}", name, e);
             }
         }
     }
 
-    bevy_log::warn!("No empire data found, using empty defaults");
-    EmpireData::default()
+    bevy_log::info!("Loaded {} empires", empires.len());
+    EmpireData { empires }
 }
 
 #[cfg(test)]
@@ -123,5 +88,11 @@ mod tests {
     fn test_empire_data_default() {
         let data = EmpireData::default();
         assert!(data.empires.is_empty());
+    }
+
+    #[test]
+    fn test_load_embedded_empires() {
+        let data = load_empire_data();
+        assert!(!data.empires.is_empty());
     }
 }
