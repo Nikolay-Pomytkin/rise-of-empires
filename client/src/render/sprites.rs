@@ -21,22 +21,12 @@ pub struct SpriteAssets {
 }
 
 /// Load sprite assets from disk
-pub fn load_sprite_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let assets = SpriteAssets {
-        // Buildings
-        town_center: Some(asset_server.load("sprites/buildings/town_center.png")),
-        barracks: Some(asset_server.load("sprites/buildings/barracks.png")),
-
-        // Units
-        villager: Some(asset_server.load("sprites/units/villager.png")),
-        soldier: Some(asset_server.load("sprites/units/soldier.png")),
-
-        // Resources
-        tree: Some(asset_server.load("sprites/resources/tree.png")),
-        gold_mine: Some(asset_server.load("sprites/resources/gold_mine.png")),
-        stone_quarry: Some(asset_server.load("sprites/resources/stone_quarry.png")),
-        berry_bush: Some(asset_server.load("sprites/resources/berry_bush.png")),
-    };
-
+/// Note: For WASM, we skip sprite loading to avoid .meta file issues
+/// and use colored fallback sprites instead
+pub fn load_sprite_assets(mut commands: Commands, _asset_server: Res<AssetServer>) {
+    // For now, use colored fallback sprites instead of loading images
+    // This avoids Bevy's asset meta file requirements which cause issues in WASM
+    // TODO: Set up proper asset processing pipeline for WASM builds
+    let assets = SpriteAssets::default();
     commands.insert_resource(assets);
 }
