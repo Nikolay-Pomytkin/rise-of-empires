@@ -1,0 +1,115 @@
+# Rise of Empires - Cursor Rules
+
+## User Preferences
+
+### Build & Test
+- **DO NOT run `cargo build`, `cargo run`, `cargo test`, or any compilation commands**
+- The user handles all building and testing manually
+- Just make code changes and describe what was changed
+- This applies to both native and WASM targets
+
+### Communication Style
+- Be direct and concise
+- Skip unnecessary explanations unless asked
+- When debugging, add logging and let the user test rather than speculating
+
+## Development Workflow
+
+### Fast Iteration (Dynamic Linking)
+For faster incremental builds during development:
+```bash
+cargo run -p client --features dev
+```
+This enables `bevy/dynamic_linking` and cuts compile times from ~30s to ~2-5s.
+**Never use `--features dev` for release builds.**
+
+### Hot Reloading
+- **Asset hot-reload**: Already enabled via `file_watcher` feature
+- **Code hot-reload**: Not yet available for Bevy 0.17 (dexterous_developer pending update)
+- Assets in `assets/` are automatically reloaded when changed
+
+## Project Architecture
+
+### Crate Structure
+```
+rise/
+├── shared/     # Common types, IDs, resources (no Bevy dependency)
+├── sim/        # Deterministic simulation (minimal Bevy: ECS only)
+├── client/     # Bevy app with rendering, UI, input
+└── tools/      # CLI utilities (headless sim, replay runner)
+```
+
+### Key Patterns
+
+#### ECS Architecture
+- **Components**: Data-only structs in `sim/src/components/`
+- **Systems**: Logic in `sim/src/systems/`
+- **Resources**: Global state like `SimWorld`, `PlayerModifiers`, `EmpireData`
+- Use Bevy's `Query`, `Res`, `ResMut` for data access
+
+#### State Management
+- `GameState` enum: `MainMenu`, `PlayMenu`, `GameSetup`, `InGame`, `Paused`
+- `SetupState` sub-state: `EmpireSelect`, `LeaderSelect`, `MapSettings`
+- Use `NextState<T>` to transition states
+
+#### Rendering (2D Sprites)
+- Camera: `Camera2d` with `OrthographicProjection`
+- Z-ordering: Higher Z = in front, Lower Z = behind
+  - Ground: Z = -100
+  - Grid lines: Z = -99
+  - Entities: Z = 0-100 range
+- Use `Sprite` with `custom_size` for colored shapes
+- `sim_pos_to_vec3()` converts sim coordinates to world coordinates
+
+#### Data Files
+- Empire/leader definitions: `assets/data/empires/*.roe` (RON format)
+- Newtype IDs in RON: `EmpireId("romans")`, `LeaderId("julius_caesar")`
+- Use `include_str!` for WASM builds to embed data at compile time
+
+#### UI (bevy_egui)
+- All UI in `client/src/ui/` modules
+- Run in `EguiPrimaryContextPass` schedule
+- Use `run_if(in_state(GameState::X))` for conditional UI
+- Handle `contexts.ctx_mut()` Result properly
+
+### Bevy 0.17 Specifics
+- `Message` API replaces old `Event` system
+- `Camera2d` is a component, not a bundle
+- `Projection` component for camera settings
+- `Sprite` component with `image` field for textures
+
+### WASM Considerations
+- Conditional compilation: `#[cfg(target_arch = "wasm32")]`
+- No filesystem access - use `include_str!` for data
+- LocalStorage for saves via `web-sys`
+- Minimize features to reduce binary size
+
+## Code Style
+
+### Rust Conventions
+- Use `bevy::prelude::*` imports
+- Prefer `let Ok(x) = query.single() else { return; }` pattern
+- Add `bevy::log::info!()` for debugging (remove when fixed)
+- Document public items with `///` comments
+
+### File Organization
+- One module per major feature
+- Re-export with `pub use module::*;` in `mod.rs`
+- Keep systems focused and small
+
+## Common Issues & Solutions
+
+### Sprites Not Visible
+1. Check Z-ordering (ground should be negative Z, entities positive)
+2. Verify camera near/far clipping planes include sprite Z values
+3. Confirm entities have `Sprite` and `Transform` components
+4. Use debug overlay to check entity counts
+
+### State Transitions Not Working
+1. Ensure state is registered with `init_state::<T>()`
+2. Use `NextState<T>` resource to change states
+3. Check `run_if` conditions match expected state
+
+### RON Parsing Errors
+- Newtype structs need explicit syntax: `FieldName(value)` not just `value`
+- Check for trailing commas and proper nesting

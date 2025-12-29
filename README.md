@@ -31,8 +31,14 @@ rise/
 ### Running the Client (Native)
 
 ```bash
+# Standard build
 cargo run -p client
+
+# Fast iteration (dynamic linking - recommended for development)
+cargo run -p client --features dev
 ```
+
+The `--features dev` flag enables dynamic linking, which dramatically reduces incremental compile times (from ~30s to ~2-5s). **Don't use this for release builds.**
 
 ### Running the Client (Web/WASM)
 

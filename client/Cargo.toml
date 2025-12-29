@@ -6,6 +6,11 @@ license.workspace = true
 authors.workspace = true
 description = "Bevy client for Rise RTS: rendering, input, UI"
 
+[features]
+default = []
+# Enable for faster incremental builds during development (not for release!)
+dev = ["bevy/dynamic_linking"]
+
 [dependencies]
 shared = { workspace = true }
 sim = { workspace = true }

@@ -44,12 +44,13 @@ impl Plugin for RenderPlugin {
 /// Convert SimPosition to Vec3 for 2D rendering
 /// SimPosition uses X/Z for ground plane, we convert to X/Y for 2D
 /// The Z component is used for sprite ordering (depth)
-/// In 2D: lower Z = in front, higher Z = behind
+/// In Bevy 2D: higher Z = closer to camera (in front), lower Z = behind
 pub fn sim_pos_to_vec3(pos: &sim::SimPosition) -> Vec3 {
     // X stays X, Z becomes Y (ground plane)
-    // Use Z in range 100-800 for entities (ground is at 900, UI at 0)
-    // Higher sim.z (further up on map) should render behind (higher Z)
-    let z_order = 500.0 + pos.z.clamp(-400.0, 400.0);
+    // Ground is at Z=-100, entities should be at positive Z (in front)
+    // Use Z in range 0-100 for entities
+    // Higher sim.z (further up on map) should render behind (lower Z)
+    let z_order = 50.0 - pos.z.clamp(-50.0, 50.0);
     Vec3::new(pos.x * TILE_SIZE, pos.z * TILE_SIZE, z_order)
 }
 

@@ -15,9 +15,9 @@ pub fn ui_debug_overlay(
     all_entities: Query<Entity>,
     sim_entities: Query<Entity, With<sim::SimEntity>>,
     visual_entities: Query<Entity, With<HasVisual>>,
-    sprites: Query<Entity, With<Sprite>>,
+    sprites: Query<(Entity, &Sprite, &Transform)>,
     units: Query<&sim::Unit>,
-    buildings: Query<&sim::Building>,
+    buildings: Query<(&sim::Building, &Transform)>,
     resources: Query<&sim::ResourceNode>,
 ) {
     let Ok(ctx) = contexts.ctx_mut() else {
@@ -73,5 +73,36 @@ pub fn ui_debug_overlay(
             ui.label(format!("Units: {}", units.iter().count()));
             ui.label(format!("Buildings: {}", buildings.iter().count()));
             ui.label(format!("Resources: {}", resources.iter().count()));
+            
+            // Show first building's transform
+            ui.separator();
+            ui.heading("First Building");
+            if let Some((building, transform)) = buildings.iter().next() {
+                ui.label(format!("Type: {:?}", building.building_type));
+                ui.label(format!(
+                    "Pos: ({:.0}, {:.0}, {:.0})",
+                    transform.translation.x, transform.translation.y, transform.translation.z
+                ));
+                ui.label(format!(
+                    "Scale: ({:.1}, {:.1}, {:.1})",
+                    transform.scale.x, transform.scale.y, transform.scale.z
+                ));
+            } else {
+                ui.label("No buildings");
+            }
+            
+            // Show first few sprites
+            ui.separator();
+            ui.heading("Sample Sprites");
+            for (i, (entity, sprite, transform)) in sprites.iter().take(3).enumerate() {
+                ui.label(format!(
+                    "#{}: pos=({:.0},{:.0},{:.0}) size={:?}",
+                    i,
+                    transform.translation.x,
+                    transform.translation.y, 
+                    transform.translation.z,
+                    sprite.custom_size
+                ));
+            }
         });
 }
