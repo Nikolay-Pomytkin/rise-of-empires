@@ -43,9 +43,11 @@ impl Plugin for RenderPlugin {
 /// SimPosition uses X/Z for ground plane, we convert to X/Y for 2D
 /// The Z component is used for sprite ordering (depth)
 pub fn sim_pos_to_vec3(pos: &sim::SimPosition) -> Vec3 {
-    // X stays X, Z becomes Y (ground plane), Y becomes Z (depth/ordering)
-    // Negate Y so that things "further" (higher Z in sim) appear behind
-    Vec3::new(pos.x * TILE_SIZE, pos.z * TILE_SIZE, -pos.z)
+    // X stays X, Z becomes Y (ground plane)
+    // Use a fixed Z range for entities: -50 to 50 based on sim Y position
+    // This keeps entities in front of the ground (-100) but behind UI
+    let z_order = (-pos.z).clamp(-50.0, 50.0);
+    Vec3::new(pos.x * TILE_SIZE, pos.z * TILE_SIZE, z_order)
 }
 
 /// Pixels per tile unit

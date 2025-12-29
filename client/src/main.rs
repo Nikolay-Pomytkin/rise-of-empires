@@ -64,6 +64,8 @@ fn main() {
                     ..default()
                 }),
         );
+        // Set a distinctive clear color so we can tell if sprites aren't rendering
+        app.insert_resource(ClearColor(Color::srgb(0.1, 0.1, 0.15)));
     }
 
     app.add_plugins(EguiPlugin::default())

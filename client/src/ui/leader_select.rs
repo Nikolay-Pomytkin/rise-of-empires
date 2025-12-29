@@ -58,16 +58,21 @@ pub fn ui_leader_select(
             );
         });
 
-    egui::CentralPanel::default()
-        .frame(egui::Frame::none().fill(egui::Color32::TRANSPARENT))
+    // Main content area - use Window instead of CentralPanel for better WASM visibility
+    egui::Window::new("Choose Your Leader")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+        .min_width(screen_rect.width() * 0.9)
+        .min_height(screen_rect.height() * 0.85)
+        .title_bar(false)
+        .frame(egui::Frame::none().fill(PANEL_BG).rounding(12.0).inner_margin(30.0))
         .show(ctx, |ui| {
             ui.vertical_centered(|ui| {
-                ui.add_space(30.0);
-
                 // Title with empire name
                 let empire_name = empire.map(|e| e.name.as_str()).unwrap_or("Unknown Empire");
                 ui.label(
-                    egui::RichText::new(format!("Choose Your Leader"))
+                    egui::RichText::new("Choose Your Leader")
                         .size(42.0)
                         .color(TITLE_COLOR)
                         .strong(),
@@ -98,7 +103,7 @@ pub fn ui_leader_select(
                         let total_width = leaders.len() as f32 * card_width + (leaders.len() - 1) as f32 * spacing;
 
                         ui.horizontal(|ui| {
-                            ui.add_space((ui.available_width() - total_width) / 2.0);
+                            ui.add_space((ui.available_width() - total_width).max(0.0) / 2.0);
 
                             for leader in leaders {
                                 let is_selected = setup_data.selected_leader.as_ref() == Some(&leader.id);
@@ -125,58 +130,62 @@ pub fn ui_leader_select(
                             .color(egui::Color32::RED),
                     );
                 }
+            });
+        });
 
-                ui.add_space(40.0);
+    // Bottom buttons - separate window at bottom
+    egui::Window::new("leader_buttons")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(egui::Align2::CENTER_BOTTOM, [0.0, -30.0])
+        .title_bar(false)
+        .frame(egui::Frame::none())
+        .show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                let button_width = 150.0;
 
-                // Bottom buttons
-                ui.horizontal(|ui| {
-                    let button_width = 150.0;
-                    let total_button_width = button_width * 2.0 + 20.0;
-                    ui.add_space((ui.available_width() - total_button_width) / 2.0);
-
-                    // Back button
-                    if ui
-                        .add(
-                            egui::Button::new(
-                                egui::RichText::new("← Back")
-                                    .size(16.0)
-                                    .color(TEXT_COLOR),
-                            )
-                            .min_size(egui::vec2(button_width, 40.0))
-                            .fill(CARD_BG)
-                            .stroke(egui::Stroke::new(1.0, BORDER_COLOR))
-                            .rounding(egui::Rounding::same(6)),
-                        )
-                        .clicked()
-                    {
-                        next_setup_state.set(SetupState::EmpireSelect);
-                    }
-
-                    ui.add_space(20.0);
-
-                    // Start Game button (only enabled if leader selected)
-                    let start_enabled = setup_data.is_ready();
-                    let start_btn = ui.add_enabled(
-                        start_enabled,
+                // Back button
+                if ui
+                    .add(
                         egui::Button::new(
-                            egui::RichText::new("⚔ Start Game")
-                                .size(18.0)
-                                .color(if start_enabled { TITLE_COLOR } else { SUBTITLE_COLOR }),
+                            egui::RichText::new("← Back")
+                                .size(16.0)
+                                .color(TEXT_COLOR),
                         )
-                        .min_size(egui::vec2(button_width + 30.0, 45.0))
-                        .fill(if start_enabled { CARD_SELECTED } else { CARD_BG })
-                        .stroke(egui::Stroke::new(
-                            if start_enabled { 2.0 } else { 1.0 },
-                            if start_enabled { SELECTED_BORDER } else { BORDER_COLOR },
-                        ))
+                        .min_size(egui::vec2(button_width, 40.0))
+                        .fill(CARD_BG)
+                        .stroke(egui::Stroke::new(1.0, BORDER_COLOR))
                         .rounding(egui::Rounding::same(6)),
-                    );
+                    )
+                    .clicked()
+                {
+                    next_setup_state.set(SetupState::EmpireSelect);
+                }
 
-                    if start_btn.clicked() {
-                        // Start the game!
-                        next_game_state.set(GameState::InGame);
-                    }
-                });
+                ui.add_space(20.0);
+
+                // Start Game button (only enabled if leader selected)
+                let start_enabled = setup_data.is_ready();
+                let start_btn = ui.add_enabled(
+                    start_enabled,
+                    egui::Button::new(
+                        egui::RichText::new("⚔ Start Game")
+                            .size(18.0)
+                            .color(if start_enabled { TITLE_COLOR } else { SUBTITLE_COLOR }),
+                    )
+                    .min_size(egui::vec2(button_width + 30.0, 45.0))
+                    .fill(if start_enabled { CARD_SELECTED } else { CARD_BG })
+                    .stroke(egui::Stroke::new(
+                        if start_enabled { 2.0 } else { 1.0 },
+                        if start_enabled { SELECTED_BORDER } else { BORDER_COLOR },
+                    ))
+                    .rounding(egui::Rounding::same(6)),
+                );
+
+                if start_btn.clicked() {
+                    // Start the game!
+                    next_game_state.set(GameState::InGame);
+                }
             });
         });
 }

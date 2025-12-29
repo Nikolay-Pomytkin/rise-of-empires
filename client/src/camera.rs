@@ -72,14 +72,17 @@ impl Default for CameraState {
 fn setup_camera(mut commands: Commands) {
     let camera_state = CameraState::default();
 
-    // Spawn 2D camera with custom projection
+    // Spawn 2D camera - in 2D, Z is just for layer ordering
+    // Camera should be at Z=0, sprites below use negative Z for ordering
     commands.spawn((
         Camera2d,
         Projection::Orthographic(OrthographicProjection {
             scale: camera_state.zoom,
+            near: -1000.0, // Allow seeing sprites with negative Z
+            far: 1000.0,   // Allow seeing sprites with positive Z
             ..OrthographicProjection::default_2d()
         }),
-        Transform::from_xyz(0.0, 0.0, 1000.0), // High Z to see all sprites
+        Transform::from_xyz(0.0, 0.0, 0.0), // Camera at origin
         MainCamera,
         camera_state,
     ));
