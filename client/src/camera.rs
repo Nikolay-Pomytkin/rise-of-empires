@@ -72,17 +72,11 @@ impl Default for CameraState {
 fn setup_camera(mut commands: Commands) {
     let camera_state = CameraState::default();
 
-    // Spawn 2D camera - in 2D, Z is just for layer ordering
-    // Camera should be at Z=0, sprites below use negative Z for ordering
+    // Spawn 2D camera
+    // Camera2d includes default OrthographicProjection
     commands.spawn((
         Camera2d,
-        Projection::Orthographic(OrthographicProjection {
-            scale: camera_state.zoom,
-            near: -1000.0, // Allow seeing sprites with negative Z
-            far: 1000.0,   // Allow seeing sprites with positive Z
-            ..OrthographicProjection::default_2d()
-        }),
-        Transform::from_xyz(0.0, 0.0, 0.0), // Camera at origin
+        Transform::from_xyz(0.0, 0.0, 0.0),
         MainCamera,
         camera_state,
     ));
@@ -144,6 +138,7 @@ fn camera_zoom(
         state.zoom -= scroll_amount * settings.zoom_speed * state.zoom;
         state.zoom = state.zoom.clamp(settings.min_zoom, settings.max_zoom);
 
+        // Update the projection scale
         if let Projection::Orthographic(ref mut ortho) = *projection {
             ortho.scale = state.zoom;
         }

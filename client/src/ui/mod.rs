@@ -1,6 +1,7 @@
 //! UI systems using bevy_egui
 
 mod building_panel;
+mod debug_overlay;
 mod empire_select;
 mod leader_select;
 mod main_menu;
@@ -11,6 +12,7 @@ mod selection;
 mod tech_panel;
 
 pub use building_panel::*;
+pub use debug_overlay::*;
 pub use empire_select::*;
 pub use leader_select::*;
 pub use main_menu::*;
@@ -64,6 +66,7 @@ impl Plugin for UiPlugin {
                     ui_selection_panel,
                     ui_tech_panel,
                     ui_building_panel,
+                    ui_debug_overlay,
                 )
                     .run_if(in_state(GameState::InGame).or(in_state(GameState::Paused))),
             );

@@ -1,0 +1,77 @@
+//! Debug overlay showing camera, entity, and rendering info
+
+use bevy::prelude::*;
+use bevy_egui::{egui, EguiContexts};
+
+use crate::camera::{CameraState, MainCamera};
+use crate::render::HasVisual;
+
+/// Debug overlay UI - shows camera position, zoom, entity counts
+pub fn ui_debug_overlay(
+    mut contexts: EguiContexts,
+    camera_query: Query<(&Transform, &CameraState, &Projection), With<MainCamera>>,
+    windows: Query<&Window>,
+    // Entity counts
+    all_entities: Query<Entity>,
+    sim_entities: Query<Entity, With<sim::SimEntity>>,
+    visual_entities: Query<Entity, With<HasVisual>>,
+    sprites: Query<Entity, With<Sprite>>,
+    units: Query<&sim::Unit>,
+    buildings: Query<&sim::Building>,
+    resources: Query<&sim::ResourceNode>,
+) {
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+
+    egui::Window::new("🔧 Debug")
+        .anchor(egui::Align2::RIGHT_TOP, [-10.0, 40.0])
+        .resizable(false)
+        .collapsible(true)
+        .default_open(true)
+        .show(ctx, |ui| {
+            // Camera info
+            ui.heading("Camera");
+            if let Ok((transform, state, projection)) = camera_query.single() {
+                ui.label(format!(
+                    "Position: ({:.0}, {:.0}, {:.0})",
+                    transform.translation.x, transform.translation.y, transform.translation.z
+                ));
+                ui.label(format!("Zoom: {:.2}", state.zoom));
+                
+                if let Projection::Orthographic(ortho) = projection {
+                    ui.label(format!("Scale: {:.2}", ortho.scale));
+                    ui.label(format!("Near/Far: {:.0}/{:.0}", ortho.near, ortho.far));
+                }
+            } else {
+                ui.label("Camera not found!");
+            }
+
+            ui.separator();
+
+            // Window info
+            ui.heading("Window");
+            if let Ok(window) = windows.single() {
+                ui.label(format!("Size: {}x{}", window.width() as u32, window.height() as u32));
+                if let Some(pos) = window.cursor_position() {
+                    ui.label(format!("Cursor: ({:.0}, {:.0})", pos.x, pos.y));
+                }
+            }
+
+            ui.separator();
+
+            // Entity counts
+            ui.heading("Entities");
+            ui.label(format!("Total: {}", all_entities.iter().count()));
+            ui.label(format!("SimEntity: {}", sim_entities.iter().count()));
+            ui.label(format!("HasVisual: {}", visual_entities.iter().count()));
+            ui.label(format!("Sprites: {}", sprites.iter().count()));
+            
+            ui.separator();
+            
+            ui.heading("Game Objects");
+            ui.label(format!("Units: {}", units.iter().count()));
+            ui.label(format!("Buildings: {}", buildings.iter().count()));
+            ui.label(format!("Resources: {}", resources.iter().count()));
+        });
+}

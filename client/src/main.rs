@@ -123,6 +123,7 @@ fn setup_game(
     }
 
     // Spawn Player 1's Town Center
+    info!("Spawning Town Center at (0, 0)...");
     spawn_town_center(
         &mut commands,
         &mut sim_world,
@@ -133,6 +134,7 @@ fn setup_game(
     );
 
     // Spawn Player 1's starting villagers
+    info!("Spawning 3 villagers...");
     for i in 0..3 {
         spawn_villager(
             &mut commands,
@@ -145,6 +147,7 @@ fn setup_game(
     }
 
     // Spawn some resource nodes
+    info!("Spawning resource nodes...");
     // Food (berries)
     spawn_resource_node(
         &mut commands,

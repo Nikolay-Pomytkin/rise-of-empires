@@ -44,20 +44,21 @@ pub fn setup_grid(mut commands: Commands) {
                      config.size, map_size, config.half_size());
 
     // Create ground plane as a colored sprite
-    // Z=-100 puts it behind most game entities but in camera's view range
+    // In 2D: higher Z = further back (rendered first), lower Z = in front
+    // Use Z=900 for ground (near the back of the view frustum)
     commands.spawn((
         Sprite {
             color: Color::srgb(0.15, 0.25, 0.1), // Dark green grass
             custom_size: Some(Vec2::new(map_size, map_size)),
             ..default()
         },
-        Transform::from_xyz(0.0, 0.0, -100.0), // Background layer
+        Transform::from_xyz(0.0, 0.0, 900.0), // Background layer (far back)
     ));
 
     // Create grid lines (every 10 tiles)
     let grid_spacing = 10;
-    let line_color = Color::srgba(0.2, 0.2, 0.2, 0.3);
-    let line_thickness = 1.0;
+    let line_color = Color::srgba(0.3, 0.3, 0.3, 0.5);
+    let line_thickness = 2.0;
     let half_size = config.half_size();
 
     // Horizontal lines
@@ -69,7 +70,7 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(map_size, line_thickness)),
                 ..default()
             },
-            Transform::from_xyz(0.0, y, -99.0), // Slightly above ground
+            Transform::from_xyz(0.0, y, 899.0), // Slightly in front of ground
         ));
     }
 
@@ -82,7 +83,7 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(line_thickness, map_size)),
                 ..default()
             },
-            Transform::from_xyz(x, 0.0, -99.0), // Slightly above ground
+            Transform::from_xyz(x, 0.0, 899.0), // Slightly in front of ground
         ));
     }
     

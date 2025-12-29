@@ -32,6 +32,11 @@ pub fn update_unit_visuals(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
+    let count = units.iter().count();
+    if count > 0 {
+        bevy::log::info!("update_unit_visuals: found {} units without visuals", count);
+    }
+    
     for (entity, pos, owner, unit) in units.iter() {
         // Check if we have a sprite for this unit type
         let sprite_handle = sprite_assets
@@ -51,6 +56,7 @@ pub fn update_unit_visuals(
 
         if let Some(texture) = sprite_handle {
             // Use sprite with texture
+            bevy::log::info!("Spawning unit {:?} at world_pos {:?}", unit.unit_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -62,6 +68,7 @@ pub fn update_unit_visuals(
             ));
         } else {
             // Fallback to colored square
+            bevy::log::info!("Spawning unit {:?} at world_pos {:?} (colored fallback)", unit.unit_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     color: player_color(owner.player_id),
@@ -84,6 +91,11 @@ pub fn update_building_visuals_sprite(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
+    let count = buildings.iter().count();
+    if count > 0 {
+        bevy::log::info!("update_building_visuals_sprite: found {} buildings without visuals", count);
+    }
+    
     for (entity, pos, owner, building) in buildings.iter() {
         // Check if we have a sprite for this building type
         let sprite_handle =
@@ -104,6 +116,7 @@ pub fn update_building_visuals_sprite(
 
         if let Some(texture) = sprite_handle {
             // Use sprite with texture
+            bevy::log::info!("Spawning building {:?} at world_pos {:?}", building.building_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -115,6 +128,7 @@ pub fn update_building_visuals_sprite(
             ));
         } else {
             // Fallback to colored square with player tint
+            bevy::log::info!("Spawning building {:?} at world_pos {:?} (colored fallback)", building.building_type, world_pos);
             let base_color = match building.building_type {
                 shared::BuildingType::TownCenter => Color::srgb(0.8, 0.7, 0.5),
                 shared::BuildingType::Barracks => Color::srgb(0.6, 0.4, 0.3),
@@ -151,6 +165,11 @@ pub fn update_resource_node_visuals(
         (With<sim::SimEntity>, Without<HasVisual>),
     >,
 ) {
+    let count = nodes.iter().count();
+    if count > 0 {
+        bevy::log::info!("update_resource_node_visuals: found {} resource nodes without visuals", count);
+    }
+    
     for (entity, pos, node) in nodes.iter() {
         // Check if we have a sprite for this resource type
         let sprite_handle = sprite_assets
@@ -174,6 +193,7 @@ pub fn update_resource_node_visuals(
 
         if let Some(texture) = sprite_handle {
             // Use sprite with texture
+            bevy::log::info!("Spawning resource {:?} at world_pos {:?}", node.resource_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -185,6 +205,7 @@ pub fn update_resource_node_visuals(
             ));
         } else {
             // Fallback to colored shapes
+            bevy::log::info!("Spawning resource {:?} at world_pos {:?} (colored fallback)", node.resource_type, world_pos);
             let color = match node.resource_type {
                 shared::ResourceType::Food => Color::srgb(0.2, 0.8, 0.3),  // Green
                 shared::ResourceType::Wood => Color::srgb(0.4, 0.25, 0.1), // Brown
