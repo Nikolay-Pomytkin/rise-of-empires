@@ -74,9 +74,11 @@ fn setup_camera(mut commands: Commands) {
 
     // Spawn 2D camera
     // Camera2d includes default OrthographicProjection
+    // Camera at high Z so it can see sprites at Z=0 to Z=500
+    // In 2D: camera looks down -Z axis, so camera.z must be > sprite.z
     commands.spawn((
         Camera2d,
-        Transform::from_xyz(0.0, 0.0, 0.0),
+        Transform::from_xyz(0.0, 0.0, 1000.0), // High Z to see all sprites
         MainCamera,
         camera_state,
     ));

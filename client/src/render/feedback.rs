@@ -71,7 +71,7 @@ fn spawn_health_bars(
                 custom_size: Some(Vec2::new(bar_width, bar_height)),
                 ..default()
             },
-            Transform::from_xyz(world_x, world_y, 500.0), // High Z for UI
+            Transform::from_xyz(world_x, world_y, 500.0),
             HealthBarBackground { parent: entity },
         ));
 
@@ -89,7 +89,7 @@ fn spawn_health_bars(
             Transform::from_xyz(
                 world_x - (bar_width - fill_width) / 2.0,
                 world_y,
-                501.0, // Slightly in front of background
+                501.0,
             ),
             HealthBarFill { parent: entity },
         ));

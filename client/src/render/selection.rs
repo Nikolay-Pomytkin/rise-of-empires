@@ -56,14 +56,14 @@ pub fn update_selection_visuals(
         let world_x = pos.x * TILE_SIZE;
         let world_y = pos.z * TILE_SIZE;
 
-        // Spawn selection ring as a hollow square/circle indicator
+        // Spawn selection ring
         commands.spawn((
             Sprite {
                 color: Color::srgba(0.0, 1.0, 0.0, 0.8),
                 custom_size: Some(Vec2::splat(TILE_SIZE * 1.2)),
                 ..default()
             },
-            Transform::from_xyz(world_x, world_y, 10.0), // Just above ground
+            Transform::from_xyz(world_x, world_y, 10.0),
             SelectionRing {
                 parent: selected_entity,
             },

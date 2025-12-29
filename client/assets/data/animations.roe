@@ -1,0 +1,162 @@
+// Animation definitions for all game entities
+// Format: ROE (RON-based game data format)
+
+// Unit animation definitions
+(
+    units: {
+        "villager": (
+            sprite_sheet: "sprites/units/villager_sheet.png",
+            frame_size: (128, 128),
+            animations: {
+                Idle: (
+                    frames: 8,
+                    frame_duration: 0.15,
+                    looping: true,
+                ),
+                Walk: (
+                    frames: 8,
+                    frame_duration: 0.1,
+                    looping: true,
+                ),
+                Gather: (
+                    frames: 8,
+                    frame_duration: 0.12,
+                    looping: true,
+                ),
+                Die: (
+                    frames: 6,
+                    frame_duration: 0.15,
+                    looping: false,
+                ),
+            },
+            directions: 8,
+        ),
+        "soldier": (
+            sprite_sheet: "sprites/units/soldier_sheet.png",
+            frame_size: (128, 128),
+            animations: {
+                Idle: (
+                    frames: 8,
+                    frame_duration: 0.15,
+                    looping: true,
+                ),
+                Walk: (
+                    frames: 8,
+                    frame_duration: 0.1,
+                    looping: true,
+                ),
+                Attack: (
+                    frames: 8,
+                    frame_duration: 0.08,
+                    looping: true,
+                ),
+                Die: (
+                    frames: 6,
+                    frame_duration: 0.15,
+                    looping: false,
+                ),
+            },
+            directions: 8,
+        ),
+    },
+
+    // Building animation definitions
+    buildings: {
+        "town_center": (
+            sprite_sheet: "sprites/buildings/town_center_sheet.png",
+            frame_size: (256, 256),
+            animations: {
+                Build: (
+                    frames: 4,
+                    frame_duration: 0.0,  // Manual progression based on build %
+                    looping: false,
+                ),
+                Idle: (
+                    frames: 1,
+                    frame_duration: 1.0,
+                    looping: true,
+                ),
+                Produce: (
+                    frames: 4,
+                    frame_duration: 0.3,
+                    looping: true,
+                ),
+            },
+            directions: 1,
+        ),
+        "barracks": (
+            sprite_sheet: "sprites/buildings/barracks_sheet.png",
+            frame_size: (192, 192),
+            animations: {
+                Build: (
+                    frames: 4,
+                    frame_duration: 0.0,
+                    looping: false,
+                ),
+                Idle: (
+                    frames: 1,
+                    frame_duration: 1.0,
+                    looping: true,
+                ),
+                Produce: (
+                    frames: 4,
+                    frame_duration: 0.3,
+                    looping: true,
+                ),
+            },
+            directions: 1,
+        ),
+    },
+
+    // Resource node animation definitions (depletion stages)
+    resources: {
+        "tree": (
+            sprite_sheet: "sprites/resources/tree_sheet.png",
+            frame_size: (128, 192),
+            animations: {
+                Idle: (
+                    frames: 4,  // Full, 75%, 50%, stump
+                    frame_duration: 0.0,  // Manual based on remaining resources
+                    looping: false,
+                ),
+            },
+            directions: 1,
+        ),
+        "gold_mine": (
+            sprite_sheet: "sprites/resources/gold_mine_sheet.png",
+            frame_size: (128, 128),
+            animations: {
+                Idle: (
+                    frames: 4,
+                    frame_duration: 0.0,
+                    looping: false,
+                ),
+            },
+            directions: 1,
+        ),
+        "stone_quarry": (
+            sprite_sheet: "sprites/resources/stone_quarry_sheet.png",
+            frame_size: (128, 128),
+            animations: {
+                Idle: (
+                    frames: 4,
+                    frame_duration: 0.0,
+                    looping: false,
+                ),
+            },
+            directions: 1,
+        ),
+        "berry_bush": (
+            sprite_sheet: "sprites/resources/berry_bush_sheet.png",
+            frame_size: (96, 96),
+            animations: {
+                Idle: (
+                    frames: 4,
+                    frame_duration: 0.0,
+                    looping: false,
+                ),
+            },
+            directions: 1,
+        ),
+    },
+)

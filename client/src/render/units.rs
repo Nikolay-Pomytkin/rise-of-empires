@@ -55,8 +55,8 @@ pub fn update_unit_visuals(
         };
 
         if let Some(texture) = sprite_handle {
-            // Use sprite with texture
-            bevy::log::info!("Spawning unit {:?} at world_pos {:?}", unit.unit_type, world_pos);
+            // Use Sprite with texture
+            bevy::log::info!("Spawning unit {:?} at world_pos {:?} with texture", unit.unit_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -64,7 +64,6 @@ pub fn update_unit_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         } else {
@@ -77,7 +76,6 @@ pub fn update_unit_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         }
@@ -117,8 +115,8 @@ pub fn update_building_visuals_sprite(
         };
 
         if let Some(texture) = sprite_handle {
-            // Use sprite with texture
-            bevy::log::info!("Spawning building {:?} at world_pos {:?}", building.building_type, world_pos);
+            // Use Sprite with texture
+            bevy::log::info!("Spawning building {:?} at world_pos {:?} with texture", building.building_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -126,7 +124,6 @@ pub fn update_building_visuals_sprite(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         } else {
@@ -153,7 +150,6 @@ pub fn update_building_visuals_sprite(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         }
@@ -196,8 +192,8 @@ pub fn update_resource_node_visuals(
         };
 
         if let Some(texture) = sprite_handle {
-            // Use sprite with texture
-            bevy::log::info!("Spawning resource {:?} at world_pos {:?}", node.resource_type, world_pos);
+            // Use Sprite with texture
+            bevy::log::info!("Spawning resource {:?} at world_pos {:?} with texture", node.resource_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -205,7 +201,6 @@ pub fn update_resource_node_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         } else {
@@ -225,7 +220,6 @@ pub fn update_resource_node_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
-                Visibility::Visible,
                 HasVisual,
             ));
         }

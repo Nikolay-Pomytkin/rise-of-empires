@@ -33,6 +33,14 @@ impl GridConfig {
     }
 }
 
+/// Marker for ground plane entity
+#[derive(Component)]
+pub struct GroundPlane;
+
+/// Marker for grid line entities
+#[derive(Component)]
+pub struct GridLine;
+
 /// Setup the tile grid (2D ground plane)
 pub fn setup_grid(mut commands: Commands) {
     let config = GridConfig::default();
@@ -43,17 +51,16 @@ pub fn setup_grid(mut commands: Commands) {
     bevy::log::info!("Setting up grid: {} tiles, {} pixels, half_size={}", 
                      config.size, map_size, config.half_size());
 
-    // Create ground plane as a colored sprite
+    // Create ground plane
     // In Bevy 2D: higher Z = closer to camera (in front), lower Z = behind
-    // Ground should be at LOW Z so entities render on top
     commands.spawn((
         Sprite {
             color: Color::srgb(0.15, 0.25, 0.1), // Dark green grass
             custom_size: Some(Vec2::new(map_size, map_size)),
             ..default()
         },
-        Transform::from_xyz(0.0, 0.0, -100.0), // Background layer (far back, negative Z)
-        Visibility::Visible,
+        Transform::from_xyz(0.0, 0.0, -100.0),
+        GroundPlane,
     ));
 
     // Create grid lines (every 10 tiles)
@@ -71,8 +78,8 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(map_size, line_thickness)),
                 ..default()
             },
-            Transform::from_xyz(0.0, y, -99.0), // Slightly in front of ground
-            Visibility::Visible,
+            Transform::from_xyz(0.0, y, -99.0),
+            GridLine,
         ));
     }
 
@@ -85,8 +92,8 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(line_thickness, map_size)),
                 ..default()
             },
-            Transform::from_xyz(x, 0.0, -99.0), // Slightly in front of ground
-            Visibility::Visible,
+            Transform::from_xyz(x, 0.0, -99.0),
+            GridLine,
         ));
     }
     
