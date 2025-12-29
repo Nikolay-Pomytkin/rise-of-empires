@@ -31,11 +31,11 @@ pub fn load_sprite_assets(mut commands: Commands, asset_server: Res<AssetServer>
         town_center: Some(asset_server.load("sprites/buildings/town_center.png")),
         barracks: Some(asset_server.load("sprites/buildings/barracks.png")),
         
-        // Units
+        // Units - use the main sprites (we have multiple variants available)
         villager: Some(asset_server.load("sprites/units/villager.png")),
-        soldier: Some(asset_server.load("sprites/units/soldier.png")),
+        soldier: Some(asset_server.load("sprites/units/soldier_idle.png")),
         
-        // Resources
+        // Resources - these still need to be generated
         tree: Some(asset_server.load("sprites/resources/tree.png")),
         gold_mine: Some(asset_server.load("sprites/resources/gold_mine.png")),
         stone_quarry: Some(asset_server.load("sprites/resources/stone_quarry.png")),

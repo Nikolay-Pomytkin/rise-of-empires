@@ -178,8 +178,46 @@ def process_sprite_sheet(
     print(f"  Saved: {output_path}")
 
 
+def create_thumbnail(img: Image.Image, max_size: int = 512) -> Image.Image:
+    """Create a smaller preview version of an image."""
+    img = img.convert("RGBA")
+    w, h = img.size
+    
+    # Calculate scale to fit within max_size
+    scale = min(max_size / w, max_size / h, 1.0)  # Don't upscale
+    
+    if scale < 1.0:
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        return img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    
+    return img
+
+
+def create_game_ready_sprite(img: Image.Image, target_height: int = 128) -> Image.Image:
+    """Scale sprite to game-ready size while maintaining aspect ratio."""
+    img = img.convert("RGBA")
+    w, h = img.size
+    
+    # Scale to target height
+    scale = target_height / h
+    new_w = int(w * scale)
+    new_h = target_height
+    
+    return img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+
 def batch_process(input_dir: Path, output_dir: Path):
     """Process all images in input directory."""
+    
+    # Create subdirectories
+    processed_dir = output_dir / "full"      # Full resolution, bg removed
+    preview_dir = output_dir / "preview"     # Small previews for viewing
+    game_dir = output_dir / "game_ready"     # Sized for game use
+    
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    preview_dir.mkdir(parents=True, exist_ok=True)
+    game_dir.mkdir(parents=True, exist_ok=True)
     
     # Define processing rules based on filename patterns
     rules = {
@@ -195,6 +233,9 @@ def batch_process(input_dir: Path, output_dir: Path):
     
     # Default rule
     default_rule = {"frame_size": (128, 128), "num_frames": 8}
+    
+    # Track all processed files for summary
+    processed_files = []
     
     # Find all PNG images
     for subdir in ["gemini", "lmarena", ""]:
@@ -215,24 +256,71 @@ def batch_process(input_dir: Path, output_dir: Path):
                     output_name = key
                     break
             
-            # Process
-            output_path = output_dir / f"{output_name}.png"
+            # Use a cleaner name
+            clean_name = img_path.stem.replace("Gemini_Generated_Image_", "gemini_")
             
             # Avoid overwriting - add suffix if exists
             counter = 1
-            while output_path.exists():
-                output_path = output_dir / f"{output_name}_{counter}.png"
+            base_name = clean_name
+            while (processed_dir / f"{clean_name}.png").exists():
+                clean_name = f"{base_name}_{counter}"
                 counter += 1
             
             try:
-                process_sprite_sheet(
-                    img_path,
-                    output_path,
-                    frame_size=rule["frame_size"],
-                    num_frames=rule["num_frames"]
-                )
+                print(f"Processing: {img_path.name}")
+                
+                # Load and process
+                img = Image.open(img_path)
+                original_size = img.size
+                print(f"  Original size: {original_size}")
+                
+                # Remove background
+                img_processed = remove_background(img, tolerance=35)
+                
+                # Extract/crop sprite strip
+                img_processed = extract_sprite_strip(img_processed, rule["num_frames"])
+                processed_size = img_processed.size
+                print(f"  After crop: {processed_size}")
+                
+                # Save full resolution (bg removed, cropped)
+                full_path = processed_dir / f"{clean_name}.png"
+                img_processed.save(full_path, "PNG")
+                print(f"  Saved full: {full_path}")
+                
+                # Save preview (smaller for viewing)
+                preview = create_thumbnail(img_processed, max_size=512)
+                preview_path = preview_dir / f"{clean_name}.png"
+                preview.save(preview_path, "PNG", optimize=True)
+                print(f"  Saved preview: {preview_path} ({preview.size})")
+                
+                # Save game-ready (scaled for actual game use)
+                game_sprite = create_game_ready_sprite(img_processed, target_height=128)
+                game_path = game_dir / f"{clean_name}.png"
+                game_sprite.save(game_path, "PNG", optimize=True)
+                print(f"  Saved game-ready: {game_path} ({game_sprite.size})")
+                
+                processed_files.append({
+                    "original": img_path.name,
+                    "clean_name": clean_name,
+                    "original_size": original_size,
+                    "processed_size": processed_size,
+                    "preview_size": preview.size,
+                    "game_size": game_sprite.size,
+                })
+                
             except Exception as e:
                 print(f"  ERROR: {e}")
+                import traceback
+                traceback.print_exc()
+    
+    # Print summary
+    print("\n" + "="*60)
+    print("PROCESSING SUMMARY")
+    print("="*60)
+    for f in processed_files:
+        print(f"\n{f['clean_name']}:")
+        print(f"  Original: {f['original']} {f['original_size']}")
+        print(f"  Processed: {f['processed_size']} -> Preview: {f['preview_size']} -> Game: {f['game_size']}")
 
 
 def main():
@@ -260,10 +348,15 @@ def main():
     print()
     print("Done! Processed sprites saved to:", output_dir)
     print()
+    print("Output structure:")
+    print(f"  {output_dir}/full/     - Full resolution, background removed")
+    print(f"  {output_dir}/preview/  - Small previews for viewing (<512px)")
+    print(f"  {output_dir}/game_ready/ - Scaled for game use (128px height)")
+    print()
     print("Next steps:")
-    print("1. Review the processed sprites")
-    print("2. Rename them appropriately (villager.png, soldier.png, etc.)")
-    print("3. Move to client/assets/sprites/units/, buildings/, or resources/")
+    print("1. Review the preview/ folder to identify each sprite")
+    print("2. Rename appropriately (villager.png, soldier.png, etc.)")
+    print("3. Copy from game_ready/ to client/assets/sprites/units/, buildings/, or resources/")
 
 
 if __name__ == "__main__":
