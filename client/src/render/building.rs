@@ -44,6 +44,7 @@ pub fn update_placement_ghost(
                     ..default()
                 },
                 Transform::from_xyz(tile_x, tile_y, 100.0),
+                Visibility::Visible,
                 PlacementGhost,
             ));
         }
