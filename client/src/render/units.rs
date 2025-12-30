@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use super::{sim_pos_to_vec3, SpriteAssets, TILE_SIZE};
+use super::{layers, sim_pos_to_vec3, SpriteAssets, TILE_SIZE};
 
 /// Marker for entities that have visuals spawned
 #[derive(Component)]
@@ -46,7 +46,7 @@ pub fn update_unit_visuals(
                 shared::UnitType::Soldier => assets.soldier.clone(),
             });
 
-        let world_pos = sim_pos_to_vec3(pos);
+        let world_pos = sim_pos_to_vec3(pos, layers::UNITS_BASE);
         
         // Size in pixels
         let size = match unit.unit_type {
@@ -54,9 +54,9 @@ pub fn update_unit_visuals(
             shared::UnitType::Soldier => TILE_SIZE * 1.8,
         };
 
+        bevy::log::info!("Spawning unit {:?} at {:?} (Z={})", unit.unit_type, world_pos, world_pos.z);
+
         if let Some(texture) = sprite_handle {
-            // Use Sprite with texture
-            bevy::log::info!("Spawning unit {:?} at world_pos {:?} with texture", unit.unit_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -68,7 +68,6 @@ pub fn update_unit_visuals(
             ));
         } else {
             // Fallback to colored square
-            bevy::log::info!("Spawning unit {:?} at world_pos {:?} (colored fallback)", unit.unit_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     color: player_color(owner.player_id),
@@ -106,7 +105,7 @@ pub fn update_building_visuals_sprite(
                     shared::BuildingType::Barracks => assets.barracks.clone(),
                 });
 
-        let world_pos = sim_pos_to_vec3(pos);
+        let world_pos = sim_pos_to_vec3(pos, layers::BUILDINGS);
 
         // Size in pixels
         let size = match building.building_type {
@@ -114,9 +113,9 @@ pub fn update_building_visuals_sprite(
             shared::BuildingType::Barracks => TILE_SIZE * 3.0,
         };
 
+        bevy::log::info!("Spawning building {:?} at {:?} (Z={})", building.building_type, world_pos, world_pos.z);
+
         if let Some(texture) = sprite_handle {
-            // Use Sprite with texture
-            bevy::log::info!("Spawning building {:?} at world_pos {:?} with texture", building.building_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -128,19 +127,12 @@ pub fn update_building_visuals_sprite(
             ));
         } else {
             // Fallback to colored square with player tint
-            bevy::log::info!("Spawning building {:?} at world_pos {:?} (colored fallback)", building.building_type, world_pos);
-            let base_color = match building.building_type {
-                shared::BuildingType::TownCenter => Color::srgb(0.8, 0.7, 0.5),
-                shared::BuildingType::Barracks => Color::srgb(0.6, 0.4, 0.3),
-            };
-            
-            // Tint with player color
             let color = if owner.player_id == shared::PlayerId::PLAYER_1 {
-                Color::srgb(0.3, 0.5, 0.8)
+                Color::srgb(0.3, 0.5, 0.8) // Blue
             } else if owner.player_id == shared::PlayerId::PLAYER_2 {
-                Color::srgb(0.8, 0.4, 0.3)
+                Color::srgb(0.8, 0.4, 0.3) // Red
             } else {
-                base_color
+                Color::srgb(0.8, 0.7, 0.5) // Neutral
             };
 
             commands.entity(entity).insert((
@@ -181,7 +173,7 @@ pub fn update_resource_node_visuals(
                 shared::ResourceType::Stone => assets.stone_quarry.clone(),
             });
 
-        let world_pos = sim_pos_to_vec3(pos);
+        let world_pos = sim_pos_to_vec3(pos, layers::RESOURCES);
 
         // Size in pixels
         let (width, height) = match node.resource_type {
@@ -191,9 +183,9 @@ pub fn update_resource_node_visuals(
             shared::ResourceType::Stone => (TILE_SIZE * 2.0, TILE_SIZE * 1.5),
         };
 
+        bevy::log::info!("Spawning resource {:?} at {:?} (Z={})", node.resource_type, world_pos, world_pos.z);
+
         if let Some(texture) = sprite_handle {
-            // Use Sprite with texture
-            bevy::log::info!("Spawning resource {:?} at world_pos {:?} with texture", node.resource_type, world_pos);
             commands.entity(entity).insert((
                 Sprite {
                     image: texture,
@@ -205,7 +197,6 @@ pub fn update_resource_node_visuals(
             ));
         } else {
             // Fallback to colored shapes
-            bevy::log::info!("Spawning resource {:?} at world_pos {:?} (colored fallback)", node.resource_type, world_pos);
             let color = match node.resource_type {
                 shared::ResourceType::Food => Color::srgb(0.2, 0.8, 0.3),  // Green
                 shared::ResourceType::Wood => Color::srgb(0.4, 0.25, 0.1), // Brown

@@ -1,6 +1,14 @@
 //! Rendering systems
 //!
 //! 2D sprite-based rendering for grid, units, buildings, and selection.
+//!
+//! Z-ordering (higher Z = rendered on top):
+//! - Ground: 0
+//! - Grid lines: 1
+//! - Resources: 2
+//! - Buildings: 3
+//! - Units: 4-10
+//! - Selection/UI: 100+
 
 mod animation;
 mod building;
@@ -48,31 +56,34 @@ impl Plugin for RenderPlugin {
 }
 
 /// Convert SimPosition to Vec3 for 2D rendering
-/// SimPosition uses X/Z for ground plane, we convert to X/Y for 2D
-/// The Z component is used for sprite ordering (depth)
-/// In Bevy 2D: higher Z = closer to camera (in front), lower Z = behind
-pub fn sim_pos_to_vec3(pos: &sim::SimPosition) -> Vec3 {
-    // X stays X, Z becomes Y (ground plane)
-    // Ground is at Z=-100, entities should be at positive Z (in front)
-    // Use Z in range 0-100 for entities
-    // Higher sim.z (further up on map) should render behind (lower Z)
-    let z_order = 50.0 - pos.z.clamp(-50.0, 50.0);
-    Vec3::new(pos.x * TILE_SIZE, pos.z * TILE_SIZE, z_order)
+/// SimPosition uses X/Z for ground plane, we convert to X/Y for 2D sprites
+/// Z component is for sprite layering (see grid.rs layers module)
+pub fn sim_pos_to_vec3(pos: &sim::SimPosition, base_layer: f32) -> Vec3 {
+    // X stays X, sim.Z becomes screen Y (ground plane)
+    // For depth sorting within a layer, use Y position
+    // Objects higher on screen (larger Y) should be behind (smaller Z)
+    // This gives a simple isometric-like depth effect
+    let depth_offset = -pos.z * 0.001; // Tiny offset based on Y for depth sorting
+    Vec3::new(
+        pos.x * TILE_SIZE, 
+        pos.z * TILE_SIZE, 
+        base_layer + depth_offset
+    )
 }
 
 /// Pixels per tile unit
 pub const TILE_SIZE: f32 = 32.0;
 
 /// Sync Bevy Transform from SimPosition
+/// Note: This only syncs X/Y, Z is set when visual is created based on entity type
 fn sync_transforms(
     mut query: Query<(&sim::SimPosition, &mut Transform), Changed<sim::SimPosition>>,
 ) {
     for (sim_pos, mut transform) in query.iter_mut() {
-        let new_pos = sim_pos_to_vec3(sim_pos);
-        transform.translation.x = new_pos.x;
-        transform.translation.y = new_pos.y;
-        // Keep Z for ordering
-        transform.translation.z = new_pos.z;
+        // Only update X and Y, preserve Z layer
+        transform.translation.x = sim_pos.x * TILE_SIZE;
+        transform.translation.y = sim_pos.z * TILE_SIZE;
+        // Z is preserved from initial spawn (layer-based)
     }
 }
 

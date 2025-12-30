@@ -1,7 +1,8 @@
 //! Camera controller
 //!
 //! 2D orthographic camera with pan and zoom controls.
-//! Uses a top-down view with Y-axis representing depth (for sprite sorting).
+//! Top-down view where X/Y are the ground plane.
+//! Z is used purely for sprite layering (higher Z = on top).
 
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
@@ -72,16 +73,20 @@ impl Default for CameraState {
 fn setup_camera(mut commands: Commands) {
     let camera_state = CameraState::default();
 
-    // Spawn 2D camera
-    // Camera2d includes default OrthographicProjection
-    // Camera at high Z so it can see sprites at Z=0 to Z=500
-    // In 2D: camera looks down -Z axis, so camera.z must be > sprite.z
+    // Spawn 2D camera at origin
+    // Camera2d uses OrthographicProjection with default near=-1000, far=1000
+    // This means sprites at Z from -1000 to 1000 are visible
+    // Camera position.z doesn't affect what's visible in orthographic!
+    // Only the near/far clipping planes matter.
+    // We keep camera at Z=0 for simplicity.
     commands.spawn((
         Camera2d,
-        Transform::from_xyz(0.0, 0.0, 1000.0), // High Z to see all sprites
+        Transform::from_xyz(0.0, 0.0, 0.0),
         MainCamera,
         camera_state,
     ));
+    
+    bevy::log::info!("Camera spawned at (0, 0, 0)");
 }
 
 /// Handle keyboard camera panning (WASD / Arrow keys)

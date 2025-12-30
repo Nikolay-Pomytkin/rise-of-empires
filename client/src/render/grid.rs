@@ -1,8 +1,28 @@
 //! Grid rendering (2D)
+//!
+//! Z-ordering layers (higher Z = rendered on top):
+//! - Ground plane: Z = 0
+//! - Grid lines: Z = 1
+//! - Resources: Z = 2
+//! - Buildings: Z = 3  
+//! - Units: Z = 4-10
+//! - UI/Selection: Z = 100+
 
 use bevy::prelude::*;
 
 use super::TILE_SIZE;
+
+/// Z-layer constants for consistent ordering
+pub mod layers {
+    pub const GROUND: f32 = 0.0;
+    pub const GRID_LINES: f32 = 1.0;
+    pub const RESOURCES: f32 = 2.0;
+    pub const BUILDINGS: f32 = 3.0;
+    pub const UNITS_BASE: f32 = 4.0;
+    pub const UNITS_MAX: f32 = 10.0;
+    pub const SELECTION: f32 = 100.0;
+    pub const PLACEMENT_GHOST: f32 = 101.0;
+}
 
 /// Grid configuration
 #[derive(Resource, Clone)]
@@ -51,19 +71,20 @@ pub fn setup_grid(mut commands: Commands) {
     bevy::log::info!("Setting up grid: {} tiles, {} pixels, half_size={}", 
                      config.size, map_size, config.half_size());
 
-    // Create ground plane
-    // In Bevy 2D: higher Z = closer to camera (in front), lower Z = behind
+    // Create ground plane at Z=0 (bottom layer)
     commands.spawn((
         Sprite {
             color: Color::srgb(0.15, 0.25, 0.1), // Dark green grass
             custom_size: Some(Vec2::new(map_size, map_size)),
             ..default()
         },
-        Transform::from_xyz(0.0, 0.0, -100.0),
+        Transform::from_xyz(0.0, 0.0, layers::GROUND),
         GroundPlane,
     ));
+    
+    bevy::log::info!("Ground plane spawned at Z={}", layers::GROUND);
 
-    // Create grid lines (every 10 tiles)
+    // Create grid lines (every 10 tiles) at Z=1
     let grid_spacing = 10;
     let line_color = Color::srgba(0.3, 0.3, 0.3, 0.5);
     let line_thickness = 2.0;
@@ -78,7 +99,7 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(map_size, line_thickness)),
                 ..default()
             },
-            Transform::from_xyz(0.0, y, -99.0),
+            Transform::from_xyz(0.0, y, layers::GRID_LINES),
             GridLine,
         ));
     }
@@ -92,10 +113,11 @@ pub fn setup_grid(mut commands: Commands) {
                 custom_size: Some(Vec2::new(line_thickness, map_size)),
                 ..default()
             },
-            Transform::from_xyz(x, 0.0, -99.0),
+            Transform::from_xyz(x, 0.0, layers::GRID_LINES),
             GridLine,
         ));
     }
     
+    bevy::log::info!("Grid lines spawned at Z={}", layers::GRID_LINES);
     bevy::log::info!("Grid setup complete!");
 }

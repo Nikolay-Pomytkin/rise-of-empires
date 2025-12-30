@@ -80,6 +80,11 @@ impl Plugin for GameStatePlugin {
             .add_systems(
                 Update,
                 handle_unpause_input.run_if(in_state(GameState::Paused)),
+            )
+            // Debug: F1 to skip setup and go directly to game
+            .add_systems(
+                Update,
+                debug_skip_setup.run_if(in_state(GameState::GameSetup)),
             );
     }
 }
@@ -120,6 +125,25 @@ fn handle_unpause_input(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if keyboard.just_pressed(KeyCode::Escape) {
+        next_state.set(GameState::InGame);
+    }
+}
+
+/// Debug: Press F1 to skip setup and go directly to game
+fn debug_skip_setup(
+    keyboard: Res<ButtonInput<KeyCode>>,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut setup_data: ResMut<GameSetupData>,
+) {
+    if keyboard.just_pressed(KeyCode::F1) {
+        info!("DEBUG: Skipping setup, going directly to game...");
+        // Set a default empire/leader so the game doesn't crash
+        setup_data.selected_empire = Some(shared::EmpireId("romans".to_string()));
+        setup_data.selected_leader = Some(shared::LeaderId("julius_caesar".to_string()));
+        setup_data.player_setup = Some(shared::PlayerSetup::new(
+            shared::EmpireId("romans".to_string()),
+            shared::LeaderId("julius_caesar".to_string()),
+        ));
         next_state.set(GameState::InGame);
     }
 }

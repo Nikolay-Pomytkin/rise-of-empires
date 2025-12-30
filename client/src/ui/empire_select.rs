@@ -88,7 +88,7 @@ pub fn ui_empire_select(
                 let cards_per_row = cards_per_row.max(1).min(4);
 
                 egui::ScrollArea::vertical()
-                    .max_height(screen_rect.height() - 200.0)
+                    .max_height(screen_rect.height() - 280.0) // Reduced to leave more room for buttons
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
                             ui.spacing_mut().item_spacing = egui::vec2(20.0, 20.0);

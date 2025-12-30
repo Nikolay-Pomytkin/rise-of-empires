@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use super::TILE_SIZE;
+use super::{layers, TILE_SIZE};
 use crate::input::{BuildingPlacementState, InputState};
 
 /// Marker component for placement ghost
@@ -23,7 +23,7 @@ pub fn update_placement_ghost(
                 // Snap to tile grid (in 2D, pos.x and pos.y are the ground plane)
                 let tile_x = (pos.x / TILE_SIZE).round() * TILE_SIZE;
                 let tile_y = (pos.y / TILE_SIZE).round() * TILE_SIZE;
-                transform.translation = Vec3::new(tile_x, tile_y, 100.0); // High Z to show on top
+                transform.translation = Vec3::new(tile_x, tile_y, layers::PLACEMENT_GHOST);
             }
         }
         // Has placement, no ghost -> spawn ghost
@@ -43,8 +43,7 @@ pub fn update_placement_ghost(
                     custom_size: Some(Vec2::splat(size)),
                     ..default()
                 },
-                Transform::from_xyz(tile_x, tile_y, 100.0),
-                Visibility::Visible,
+                Transform::from_xyz(tile_x, tile_y, layers::PLACEMENT_GHOST),
                 PlacementGhost,
             ));
         }

@@ -4,7 +4,7 @@
 
 use bevy::prelude::*;
 
-use super::TILE_SIZE;
+use super::{layers, TILE_SIZE};
 
 /// Plugin for visual feedback
 pub struct VisualFeedbackPlugin;
@@ -64,14 +64,14 @@ fn spawn_health_bars(
         let world_x = pos.x * TILE_SIZE;
         let world_y = pos.z * TILE_SIZE + bar_y_offset;
 
-        // Background (dark)
+        // Background (dark) - high Z layer for UI elements
         commands.spawn((
             Sprite {
                 color: Color::srgba(0.1, 0.1, 0.1, 0.8),
                 custom_size: Some(Vec2::new(bar_width, bar_height)),
                 ..default()
             },
-            Transform::from_xyz(world_x, world_y, 500.0),
+            Transform::from_xyz(world_x, world_y, layers::SELECTION + 1.0),
             HealthBarBackground { parent: entity },
         ));
 
@@ -89,7 +89,7 @@ fn spawn_health_bars(
             Transform::from_xyz(
                 world_x - (bar_width - fill_width) / 2.0,
                 world_y,
-                501.0,
+                layers::SELECTION + 2.0,
             ),
             HealthBarFill { parent: entity },
         ));
@@ -199,7 +199,7 @@ fn update_gathering_indicators(
                 custom_size: Some(Vec2::splat(TILE_SIZE * 0.5)),
                 ..default()
             },
-            Transform::from_xyz(world_x, world_y - TILE_SIZE * 0.3, 50.0),
+            Transform::from_xyz(world_x, world_y - TILE_SIZE * 0.3, layers::UNITS_MAX + 1.0),
             GatheringIndicator {
                 parent: entity,
                 pulse_timer: 0.0,

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
 use crate::camera::{CameraState, MainCamera};
-use crate::render::HasVisual;
+use crate::render::{layers, HasVisual};
 
 /// Debug overlay UI - shows camera position, zoom, entity counts
 pub fn ui_debug_overlay(
@@ -48,6 +48,16 @@ pub fn ui_debug_overlay(
             }
 
             ui.separator();
+            
+            // Z-Layer reference
+            ui.heading("Z Layers");
+            ui.label(format!("Ground: {}", layers::GROUND));
+            ui.label(format!("Grid: {}", layers::GRID_LINES));
+            ui.label(format!("Resources: {}", layers::RESOURCES));
+            ui.label(format!("Buildings: {}", layers::BUILDINGS));
+            ui.label(format!("Units: {}-{}", layers::UNITS_BASE, layers::UNITS_MAX));
+
+            ui.separator();
 
             // Window info
             ui.heading("Window");
@@ -80,28 +90,27 @@ pub fn ui_debug_overlay(
             if let Some((building, transform)) = buildings.iter().next() {
                 ui.label(format!("Type: {:?}", building.building_type));
                 ui.label(format!(
-                    "Pos: ({:.0}, {:.0}, {:.0})",
+                    "Pos: ({:.0}, {:.0}, Z={:.1})",
                     transform.translation.x, transform.translation.y, transform.translation.z
-                ));
-                ui.label(format!(
-                    "Scale: ({:.1}, {:.1}, {:.1})",
-                    transform.scale.x, transform.scale.y, transform.scale.z
                 ));
             } else {
                 ui.label("No buildings");
             }
             
-            // Show first few sprites
+            // Show first few sprites with Z values
             ui.separator();
             ui.heading("Sample Sprites");
-            for (i, (entity, sprite, transform)) in sprites.iter().take(3).enumerate() {
+            for (i, (_entity, sprite, transform)) in sprites.iter().take(5).enumerate() {
+                let size_str = sprite.custom_size
+                    .map(|s| format!("{:.0}x{:.0}", s.x, s.y))
+                    .unwrap_or_else(|| "default".to_string());
                 ui.label(format!(
-                    "#{}: pos=({:.0},{:.0},{:.0}) size={:?}",
+                    "#{}: ({:.0},{:.0}) Z={:.1} [{}]",
                     i,
                     transform.translation.x,
                     transform.translation.y, 
                     transform.translation.z,
-                    sprite.custom_size
+                    size_str
                 ));
             }
         });

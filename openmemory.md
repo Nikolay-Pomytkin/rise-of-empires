@@ -93,10 +93,22 @@ next_state.set(GameState::InGame);
 ```
 
 ### 2D Rendering Z-Order
-- Ground plane: Z = -100 (furthest back)
-- Grid lines: Z = -99
-- Game entities: Z = 0-100 (positive = in front)
-- UI is handled by egui separately
+Z-ordering uses positive values (higher Z = rendered on top):
+```rust
+// Defined in client/src/render/grid.rs
+pub mod layers {
+    pub const GROUND: f32 = 0.0;
+    pub const GRID_LINES: f32 = 1.0;
+    pub const RESOURCES: f32 = 2.0;
+    pub const BUILDINGS: f32 = 3.0;
+    pub const UNITS_BASE: f32 = 4.0;
+    pub const UNITS_MAX: f32 = 10.0;
+    pub const SELECTION: f32 = 100.0;
+    pub const PLACEMENT_GHOST: f32 = 101.0;
+}
+```
+- Camera at (0, 0, 0) with OrthographicProjection (near=-1000, far=1000)
+- UI is handled by egui separately (not affected by sprite Z)
 
 ### Data-Driven Definitions
 Empire data in RON format with newtype syntax:
@@ -129,8 +141,11 @@ Use `bevy::log::info!()` for debug output, visible in terminal.
 ## Known Issues & Solutions
 
 ### Issue: Sprites not rendering
-**Cause**: Z-ordering incorrect (entities behind ground)
-**Solution**: Ground at negative Z, entities at positive Z
+**Cause**: Z-ordering incorrect or missing Visibility component
+**Solution**: 
+1. Use layer constants from `grid.rs::layers` module
+2. Camera at Z=0, ground at Z=0, entities at Z=2-10
+3. Ensure `Visibility::Visible` is added when spawning sprites manually
 
 ### Issue: Empire selection flickers
 **Cause**: State transition race condition

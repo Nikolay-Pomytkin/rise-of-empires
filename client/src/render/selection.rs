@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use super::TILE_SIZE;
+use super::{layers, TILE_SIZE};
 use crate::input::SelectionState;
 
 /// Marker for selection ring entity
@@ -56,14 +56,14 @@ pub fn update_selection_visuals(
         let world_x = pos.x * TILE_SIZE;
         let world_y = pos.z * TILE_SIZE;
 
-        // Spawn selection ring
+        // Spawn selection ring at selection layer
         commands.spawn((
             Sprite {
                 color: Color::srgba(0.0, 1.0, 0.0, 0.8),
                 custom_size: Some(Vec2::splat(TILE_SIZE * 1.2)),
                 ..default()
             },
-            Transform::from_xyz(world_x, world_y, 10.0),
+            Transform::from_xyz(world_x, world_y, layers::SELECTION),
             SelectionRing {
                 parent: selected_entity,
             },
