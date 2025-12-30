@@ -48,11 +48,14 @@ This document serves as a living index of the project for AI assistants.
 ## Components & Systems
 
 ### Rendering Pipeline
-- `setup_grid` - Creates ground plane and grid lines at startup
+- `setup_grid` - Creates ground plane and grid lines on `OnEnter(InGame)`
+- `cleanup_grid` - Despawns grid and game entities on `OnExit(InGame)`
 - `update_unit_visuals` - Spawns sprites for units
 - `update_building_visuals_sprite` - Spawns sprites for buildings
 - `update_resource_node_visuals` - Spawns sprites for resources
 - `sync_transforms` - Updates Transform from SimPosition changes
+
+**Note**: Grid is NOT visible in menus - only spawned when entering InGame state.
 
 ### UI Systems
 - `ui_main_menu` - Title screen
@@ -109,6 +112,8 @@ pub mod layers {
 ```
 - Camera at (0, 0, 0) with OrthographicProjection (near=-1000, far=1000)
 - UI is handled by egui separately (not affected by sprite Z)
+- Ground plane color: `Color::srgb(0.2, 0.45, 0.15)` (grass green)
+- Background clear color: `Color::srgb(0.08, 0.08, 0.12)` (dark blue-gray)
 
 ### Data-Driven Definitions
 Empire data in RON format with newtype syntax:

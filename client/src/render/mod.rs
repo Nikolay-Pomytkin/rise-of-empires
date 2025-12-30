@@ -36,7 +36,12 @@ impl Plugin for RenderPlugin {
         app.add_plugins(VisualFeedbackPlugin)
             .init_resource::<SpriteMaterials>()
             .init_resource::<AnimationData>()
-            .add_systems(Startup, (setup_grid, load_sprite_assets, setup_animation_data))
+            // Load sprite assets at startup (they're needed for any game)
+            .add_systems(Startup, (load_sprite_assets, setup_animation_data))
+            // Setup grid when entering InGame state (not at startup)
+            .add_systems(OnEnter(GameState::InGame), setup_grid)
+            // Cleanup grid when leaving InGame state
+            .add_systems(OnExit(GameState::InGame), cleanup_grid)
             .add_systems(
                 Update,
                 (

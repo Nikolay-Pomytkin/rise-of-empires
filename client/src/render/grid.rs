@@ -9,8 +9,10 @@
 //! - UI/Selection: Z = 100+
 
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
 use super::TILE_SIZE;
+use super::HasVisual;
 
 /// Z-layer constants for consistent ordering
 pub mod layers {
@@ -72,17 +74,22 @@ pub fn setup_grid(mut commands: Commands) {
                      config.size, map_size, config.half_size());
 
     // Create ground plane at Z=0 (bottom layer)
+    // Grass green color - more saturated and visible
     commands.spawn((
         Sprite {
-            color: Color::srgb(0.15, 0.25, 0.1), // Dark green grass
+            color: Color::srgb(0.2, 0.45, 0.15), // Grass green
             custom_size: Some(Vec2::new(map_size, map_size)),
             ..default()
         },
         Transform::from_xyz(0.0, 0.0, layers::GROUND),
+        GlobalTransform::default(),
+        Visibility::Visible,
+        InheritedVisibility::default(),
+        ViewVisibility::default(),
         GroundPlane,
     ));
     
-    bevy::log::info!("Ground plane spawned at Z={}", layers::GROUND);
+    bevy::log::info!("Ground plane spawned at Z={} with size {}", layers::GROUND, map_size);
 
     // Create grid lines (every 10 tiles) at Z=1
     let grid_spacing = 10;
@@ -100,6 +107,10 @@ pub fn setup_grid(mut commands: Commands) {
                 ..default()
             },
             Transform::from_xyz(0.0, y, layers::GRID_LINES),
+            GlobalTransform::default(),
+            Visibility::Visible,
+            InheritedVisibility::default(),
+            ViewVisibility::default(),
             GridLine,
         ));
     }
@@ -114,10 +125,48 @@ pub fn setup_grid(mut commands: Commands) {
                 ..default()
             },
             Transform::from_xyz(x, 0.0, layers::GRID_LINES),
+            GlobalTransform::default(),
+            Visibility::Visible,
+            InheritedVisibility::default(),
+            ViewVisibility::default(),
             GridLine,
         ));
     }
     
     bevy::log::info!("Grid lines spawned at Z={}", layers::GRID_LINES);
     bevy::log::info!("Grid setup complete!");
+}
+
+/// Cleanup grid entities when leaving InGame state
+pub fn cleanup_grid(
+    mut commands: Commands,
+    ground_query: Query<Entity, With<GroundPlane>>,
+    grid_line_query: Query<Entity, With<GridLine>>,
+    // Also cleanup game entities with visuals
+    visual_entities: Query<Entity, With<HasVisual>>,
+    sim_entities: Query<Entity, With<sim::SimEntity>>,
+) {
+    bevy::log::info!("Cleaning up grid and game entities...");
+    
+    // Despawn ground plane
+    for entity in ground_query.iter() {
+        commands.entity(entity).despawn();
+    }
+    
+    // Despawn grid lines
+    for entity in grid_line_query.iter() {
+        commands.entity(entity).despawn();
+    }
+    
+    // Despawn visual entities
+    for entity in visual_entities.iter() {
+        commands.entity(entity).despawn();
+    }
+    
+    // Despawn sim entities
+    for entity in sim_entities.iter() {
+        commands.entity(entity).despawn();
+    }
+    
+    bevy::log::info!("Grid cleanup complete!");
 }

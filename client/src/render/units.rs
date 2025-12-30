@@ -64,6 +64,10 @@ pub fn update_unit_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         } else {
@@ -75,6 +79,10 @@ pub fn update_unit_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         }
@@ -123,6 +131,10 @@ pub fn update_building_visuals_sprite(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         } else {
@@ -142,6 +154,10 @@ pub fn update_building_visuals_sprite(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         }
@@ -193,6 +209,10 @@ pub fn update_resource_node_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         } else {
@@ -211,6 +231,10 @@ pub fn update_resource_node_visuals(
                     ..default()
                 },
                 Transform::from_translation(world_pos),
+                GlobalTransform::default(),
+                Visibility::Visible,
+                InheritedVisibility::default(),
+                ViewVisibility::default(),
                 HasVisual,
             ));
         }

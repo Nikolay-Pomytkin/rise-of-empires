@@ -47,6 +47,8 @@ fn main() {
                     ..default()
                 }),
         );
+        // Dark blue-gray background color for menus (grass green will be the ground sprite)
+        app.insert_resource(ClearColor(Color::srgb(0.08, 0.08, 0.12)));
     }
 
     #[cfg(target_arch = "wasm32")]
