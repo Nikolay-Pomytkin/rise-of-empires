@@ -1,13 +1,13 @@
 # Rise RTS
 
-A real-time strategy game built with Rust and Bevy 0.17.
+A real-time strategy game built with a Rust simulation core and a TypeScript + Pixi renderer.
 
 ## Features
 
 - **Deterministic Simulation**: Fixed-tick simulation with seeded RNG for replay and lockstep multiplayer support
 - **Economy System**: Resource gathering (food, wood, gold, stone), villagers, and production queues
 - **Tech Tree**: Data-driven technology system with ages and upgrades
-- **Cross-Platform**: Runs on Windows, macOS, Linux, and **Web (WASM)**
+- **Cross-Platform**: Runs in modern browsers via Pixi + WASM simulation
 
 ## Project Structure
 
@@ -15,8 +15,7 @@ A real-time strategy game built with Rust and Bevy 0.17.
 rise/
 ├── shared/     # Shared types (IDs, commands, resources, snapshots)
 ├── sim/        # Deterministic simulation core
-├── client/     # Bevy client (legacy rendering, input, UI)
-├── web-client/ # New TypeScript web client skeleton (Pixi)
+├── web-client/ # TypeScript Pixi client (rendering, input, UI)
 ├── tools/      # Headless sim runner, replay tools
 └── assets/     # Game data files (ROE format)
 ```
@@ -25,38 +24,8 @@ rise/
 
 ### Prerequisites
 
-- Rust 1.75+ (install via [rustup](https://rustup.rs/))
-- For Linux: `sudo apt-get install libasound2-dev libudev-dev libxkbcommon-dev`
-- For WASM: `rustup target add wasm32-unknown-unknown && cargo install trunk`
-
-### Running the Client (Native)
-
-```bash
-# Standard build
-cargo run -p client
-
-# Fast iteration (dynamic linking - recommended for development)
-cargo run -p client --features dev
-```
-
-The `--features dev` flag enables dynamic linking, which dramatically reduces incremental compile times (from ~30s to ~2-5s). **Don't use this for release builds.**
-
-### Running the Client (Web/WASM)
-
-```bash
-cd client
-trunk serve
-```
-
-Then open http://localhost:8080 in your browser.
-
-### Building for Web (Release)
-
-```bash
-cd client
-trunk build --release
-# Built files are in client/dist/
-```
+- Rust 1.75+ (install via [rustup](https://rustup.rs/)) for the simulation/runtime crates
+- Bun (or npm) for the Pixi web client
 
 ### Controls
 
@@ -76,7 +45,7 @@ cargo run -p tools --bin headless_sim -- <ticks> <seed> [commands.ron]
 ```
 
 
-### Web Client (TypeScript skeleton)
+### Running the Web Client (TypeScript + Pixi)
 
 ```bash
 cd web-client
@@ -85,7 +54,7 @@ bun install
 bun run dev
 ```
 
-See `docs/web-client-migration.md` for the migration strategy and runtime bridge API.
+See `docs/web-client-migration.md` for the runtime bridge API.
 
 ### Running Tests
 
@@ -127,7 +96,7 @@ Snapshots can be hashed for replay validation.
 1. Add unit type to `shared/src/commands.rs` (`UnitType` enum)
 2. Add unit definition to `assets/data/units.roe`
 3. Add component setup in `sim/src/systems/production.rs`
-4. Add visual rendering in `client/src/render/units.rs`
+4. Add visual rendering in `web-client/src/render/`
 
 ### New Buildings
 
@@ -173,22 +142,13 @@ Hot reloading is enabled - changes to these files are picked up automatically.
 
 See [docs/packaging.md](docs/packaging.md) for platform-specific build instructions.
 
-### Native
+### Web (Pixi)
 
 ```bash
-# Release build
-cargo build --release -p client
+cd web-client
+bun run build
 
-# The binary will be at target/release/client
-```
-
-### Web (WASM)
-
-```bash
-cd client
-trunk build --release
-
-# Built files are in client/dist/
+# Built files are in web-client/dist/
 # Deploy the dist/ folder to any static hosting (Cloudflare Pages, Netlify, etc.)
 ```
 
@@ -203,4 +163,3 @@ Required GitHub secrets:
 ## License
 
 MIT License - see LICENSE file for details.
-
