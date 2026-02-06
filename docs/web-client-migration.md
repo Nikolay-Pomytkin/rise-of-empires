@@ -1,6 +1,6 @@
 # Web Client Migration Plan
 
-This branch starts the client reboot path with deterministic Rust sim retained as authoritative logic.
+The Pixi web client is now the primary renderer, with the deterministic Rust sim retained as authoritative logic.
 
 ## Direction
 
@@ -10,7 +10,7 @@ This branch starts the client reboot path with deterministic Rust sim retained a
   - `enqueue_commands`
   - `step`
   - `get_snapshot`
-- Rebuild rendering/UI/input in a web-first TypeScript client (`web-client/`) using Pixi.
+- Rendering/UI/input lives in the web-first TypeScript client (`web-client/`) using Pixi.
 
 ## What is included
 
@@ -24,7 +24,7 @@ This branch starts the client reboot path with deterministic Rust sim retained a
 - Replace `MockSimBridge` with real WASM bindings from the `sim` crate.
 - Map browser input into `GameCommand` creation and command stamping.
 - Render snapshot entities with sprites, selection outlines, and UI overlays.
-- Once parity is reached, remove Bevy rendering client.
+- Bevy rendering has been removed from the workspace in favor of Pixi.
 
 
 ## Bun/network troubleshooting
