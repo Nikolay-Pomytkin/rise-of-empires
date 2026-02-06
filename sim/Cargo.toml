@@ -9,6 +9,7 @@ description = "Deterministic simulation core for Rise RTS"
 [features]
 default = ["deterministic_rng"]
 deterministic_rng = ["rand_xoshiro"]
+wasm_api = ["wasm-bindgen"]
 
 [dependencies]
 shared = { workspace = true }
@@ -18,6 +19,7 @@ rand = { workspace = true }
 rand_xoshiro = { workspace = true, optional = true }
 rand_core = { workspace = true }
 seahash = { workspace = true }
+wasm-bindgen = { workspace = true, optional = true }
 
 # Minimal bevy - just ECS, no rendering/windowing
 bevy_app = "0.17.0"

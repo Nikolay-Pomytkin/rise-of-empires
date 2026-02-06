@@ -15,7 +15,8 @@ A real-time strategy game built with Rust and Bevy 0.17.
 rise/
 ├── shared/     # Shared types (IDs, commands, resources, snapshots)
 ├── sim/        # Deterministic simulation core
-├── client/     # Bevy client (rendering, input, UI)
+├── client/     # Bevy client (legacy rendering, input, UI)
+├── web-client/ # New TypeScript web client skeleton (Pixi)
 ├── tools/      # Headless sim runner, replay tools
 └── assets/     # Game data files (ROE format)
 ```
@@ -73,6 +74,18 @@ trunk build --release
 ```bash
 cargo run -p tools --bin headless_sim -- <ticks> <seed> [commands.ron]
 ```
+
+
+### Web Client (TypeScript skeleton)
+
+```bash
+cd web-client
+bun run doctor:registry  # verify registry/proxy access first
+bun install
+bun run dev
+```
+
+See `docs/web-client-migration.md` for the migration strategy and runtime bridge API.
 
 ### Running Tests
 

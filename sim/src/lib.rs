@@ -24,8 +24,11 @@
 pub mod components;
 pub mod data;
 pub mod rng;
+pub mod runtime;
 pub mod systems;
 pub mod tick;
+#[cfg(feature = "wasm_api")]
+pub mod wasm_api;
 pub mod world;
 
 #[cfg(test)]
@@ -38,6 +41,7 @@ pub use bevy_ecs::prelude::*;
 pub use components::*;
 pub use data::*;
 pub use rng::*;
+pub use runtime::*;
 pub use tick::*;
 pub use world::*;
 
